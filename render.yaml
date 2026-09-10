@@ -8,3 +8,15 @@ services:
     envVars:
       - key: PORT
         value: 3000
+      - key: DEVICE_ID
+        value: SMARTDRIVE-GW-01
+      - key: DEVICE_NAME
+        value: SmartDrive Hardware Gateway
+      - key: DEVICE_HARDWARE
+        value: SmartDrive Hub v2.4 (Quad-Core Cortex-A72)
+      - key: DEVICE_STORAGE_TYPE
+        value: USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)
+      - key: DEVICE_TOTAL_GB
+        value: 500
+      - key: DEVICE_USED_GB
+        value: 137

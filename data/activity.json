@@ -1,5 +1,21 @@
 [
   {
+    "id": "act_1789029340964",
+    "title": "Physical Gateway Connected",
+    "description": "Live hardware 'PI-GATEWAY-42' connected to Cloud Portal from wlan0 (192.168.1.88)",
+    "timestamp": "2026-09-10T08:35:40.964Z",
+    "type": "storage",
+    "icon": "🔗"
+  },
+  {
+    "id": "act_1789029340414",
+    "title": "Storage Initialized",
+    "description": "Default gateway storage seeded with system files and manuals",
+    "timestamp": "2026-09-10T08:35:40.414Z",
+    "type": "storage",
+    "icon": "💾"
+  },
+  {
     "id": "act_1789024593119",
     "title": "File Downloaded",
     "description": "'ANNEXURE 11 approved nomenclature of courses.pdf' downloaded from storage",

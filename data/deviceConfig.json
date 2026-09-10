@@ -1,0 +1,11 @@
+{
+  "device_id": "SMARTDRIVE-GW-01",
+  "device_name": "SmartDrive Hardware Gateway",
+  "hardware": "SmartDrive Hub v2.4 (Quad-Core Cortex-A72)",
+  "storage_type": "USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)",
+  "network": "Gigabit LAN (192.168.1.105)",
+  "total_bytes": 536870912000,
+  "used_bytes": 147111280640,
+  "mode": "Storage Gateway / Active",
+  "auto_detect": false
+}

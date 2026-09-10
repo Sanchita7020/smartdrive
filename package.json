@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "agent": "node gateway-agent.js",
     "test": "echo \"Running tests...\" && exit 0"
   },
   "dependencies": {

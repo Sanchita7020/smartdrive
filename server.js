@@ -41,9 +41,13 @@ app.get('*', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`========================================`);
-  console.log(`SmartDrive Server running on http://localhost:${PORT}`);
-  console.log(`Real Storage Root: ${path.join(__dirname, 'hub_storage')}`);
-  console.log(`========================================`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`========================================`);
+    console.log(`SmartDrive Server running on http://localhost:${PORT}`);
+    console.log(`Real Storage Root: ${path.join(__dirname, 'hub_storage')}`);
+    console.log(`========================================`);
+  });
+}
+
+module.exports = app;

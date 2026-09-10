@@ -532,57 +532,147 @@ aside{
 
     <!-- SETTINGS -->
     <section id="settings" style="display:none">
+      <!-- 1. System Status & Diagnostics -->
       <div class="card">
         <div class="card-title">
-          <h3>Prototype Settings</h3>
+          <div>
+            <h3>Hardware Diagnostics & Live Telemetry</h3>
+            <div class="muted">Real-time status of the gateway system and active telemetry feeds.</div>
+          </div>
+          <span id="gatewayModeBadge" class="status" style="background:#eaf8f1;color:#159957">
+            <span class="dot"></span> <span id="gatewayModeText">Gateway Online</span>
+          </span>
         </div>
 
-        <div class="notice success" style="margin-bottom:18px">
-          ✓ Real System Connected: Real hardware telemetry, live disk space, and JWT authentication are active.
+        <div id="cloudDeployNotice" class="notice" style="margin-bottom:18px;display:none">
+          🌐 <strong>Cloud Deployment Detected (Render / Container):</strong> SmartDrive is running in Cloud Gateway Mode. You can customize the device profile below or stream live physical hardware using the Gateway Agent.
         </div>
 
         <div style="margin-top:10px">
-          <div class="device-line"><span>Host Machine</span><strong id="settingsHost">—</strong></div>
-          <div class="device-line"><span>Processor</span><strong id="settingsCpu">—</strong></div>
-          <div class="device-line"><span>Network IP</span><strong id="settingsIp">—</strong></div>
-          <div class="device-line"><span>Total Disk Space</span><strong id="settingsTotalDisk">—</strong></div>
+          <div class="device-line"><span>Gateway Device ID</span><strong id="settingsHost">—</strong></div>
+          <div class="device-line"><span>Hardware / CPU</span><strong id="settingsCpu">—</strong></div>
+          <div class="device-line"><span>Network Connection</span><strong id="settingsIp">—</strong></div>
+          <div class="device-line"><span>Storage Drive Type</span><strong id="settingsDriveType">—</strong></div>
+          <div class="device-line"><span>Total Storage Space</span><strong id="settingsTotalDisk">—</strong></div>
           <div class="device-line"><span>Available Free Space</span><strong id="settingsFreeDisk">—</strong></div>
           <div class="device-line"><span>Storage Directory</span><strong id="settingsStoragePath" style="font-size:12px;word-break:break-all">./hub_storage</strong></div>
-          <div class="device-line"><span>Current JWT Session</span><strong id="jwtStatusBadge" style="font-size:12px;color:var(--accent)">Active</strong></div>
+          <div class="device-line"><span>Telemetry Source</span><strong id="settingsTelemetrySource" style="color:var(--accent)">Cloud Profile</strong></div>
+          <div class="device-line"><span>JWT Session Status</span><strong id="jwtStatusBadge" style="font-size:12px;color:var(--accent)">Active</strong></div>
+        </div>
+      </div>
+
+      <!-- 2. Device Identity & Hardware Profile Configuration -->
+      <div class="card">
+        <div class="card-title">
+          <div>
+            <h3>⚙️ SmartDrive Identity & Hardware Profile</h3>
+            <div class="muted">Customize the hardware telemetry, drive capacity, and network identity shown across the dashboard.</div>
+          </div>
         </div>
 
-        <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-          <div class="card-title">
-            <h3 style="font-size:15px">Mount Custom Drive or Directory</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+          <div class="form-group">
+            <label>Device ID</label>
+            <input id="cfgDeviceId" class="form-input" placeholder="e.g. SMARTDRIVE-GW-01" />
           </div>
-          <p class="muted" style="margin-bottom:12px">Point the hub storage to an external USB drive letter (e.g. <code>E:\</code>) or any local folder on this machine.</p>
-          <div style="display:flex;gap:10px">
-            <input id="mountInput" class="search" placeholder="e.g. E:\ or C:\Users\NMIET\Documents" />
-            <button class="btn primary" onclick="handleMountStorage()">Mount Path</button>
+          <div class="form-group">
+            <label>Device / Gateway Name</label>
+            <input id="cfgDeviceName" class="form-input" placeholder="e.g. SmartDrive Hardware Gateway" />
+          </div>
+          <div class="form-group">
+            <label>Hardware Architecture / Model</label>
+            <input id="cfgHardware" class="form-input" placeholder="e.g. SmartDrive Hub v2.4 (Quad-Core Cortex-A72)" />
+          </div>
+          <div class="form-group">
+            <label>Network Connection / IP</label>
+            <input id="cfgNetwork" class="form-input" placeholder="e.g. Gigabit LAN (192.168.1.105)" />
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label>Storage Drive Model / Bus</label>
+            <input id="cfgStorageType" class="form-input" placeholder="e.g. USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)" />
+          </div>
+          <div class="form-group">
+            <label>Total Capacity (GB)</label>
+            <input id="cfgTotalGb" type="number" class="form-input" placeholder="500" />
+          </div>
+          <div class="form-group">
+            <label>Used Storage (GB)</label>
+            <input id="cfgUsedGb" type="number" class="form-input" placeholder="137" />
           </div>
         </div>
-        <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-          <div class="card-title">
+
+        <div style="margin-top:10px;display:flex;gap:12px;align-items:center">
+          <button class="btn primary" onclick="handleSaveDeviceConfig()">Save Device Profile</button>
+          <button class="btn" onclick="resetDeviceConfigDefaults()">Reset Defaults</button>
+          <span id="cfgSaveStatus" class="muted" style="font-size:12px"></span>
+        </div>
+      </div>
+
+      <!-- 3. Physical Gateway Sync Agent (Stream Real USB Hardware) -->
+      <div class="card">
+        <div class="card-title">
+          <div>
+            <h3>📡 Stream Physical USB Drive & Hardware Telemetry</h3>
+            <div class="muted">Run the Gateway Agent on your physical computer or Raspberry Pi to stream your real USB stick into this cloud portal.</div>
+          </div>
+          <span id="agentStatusBadge" class="status" style="background:#fff8e6;color:#775d20">
+            <span class="dot"></span> <span id="agentStatusText">Waiting for Agent</span>
+          </span>
+        </div>
+
+        <p class="muted" style="font-size:13px;line-height:1.6;margin-bottom:12px">
+          If you have a physical USB drive or local hard drive plugged into your PC/Raspberry Pi and want this Render cloud portal to show its live hardware data in real time, run this command in your project folder:
+        </p>
+
+        <div style="background:#1e2433;border-radius:10px;padding:12px 16px;color:#a5d6a7;font-family:monospace;font-size:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span id="agentCmdSnippet" style="word-break:break-all">node gateway-agent.js --cloud https://your-domain.onrender.com --storage E:\</span>
+          <button class="mini-btn" style="background:rgba(255,255,255,0.15);color:white;margin-left:12px;white-space:nowrap" onclick="copyAgentCommand()">Copy Command</button>
+        </div>
+
+        <div class="notice" style="font-size:12px">
+          💡 <strong>Tip:</strong> Replace <code>E:\</code> with your actual USB drive letter on Windows (e.g. <code>D:\</code>, <code>F:\</code>) or mount path on Linux (e.g. <code>/mnt/usb</code>). The agent will stream telemetry to Render every 15s.
+        </div>
+      </div>
+
+      <!-- 4. Mount Custom Drive or Directory (Local Mode) -->
+      <div class="card">
+        <div class="card-title">
+          <div>
+            <h3 style="font-size:15px">Mount Custom Local Directory</h3>
+            <div class="muted">Mount a folder directly on the machine hosting the backend server.</div>
+          </div>
+        </div>
+        <p class="muted" style="margin-bottom:12px;font-size:13px">
+          Direct directory mounting is supported when running locally on your hardware. On cloud servers (like Render), use the Gateway Agent above.
+        </p>
+        <div style="display:flex;gap:10px">
+          <input id="mountInput" class="search" placeholder="e.g. ./hub_storage or /var/storage" />
+          <button class="btn primary" onclick="handleMountStorage()">Mount Path</button>
+        </div>
+      </div>
+
+      <!-- 5. Firebase Cloud Integration -->
+      <div class="card">
+        <div class="card-title">
+          <div>
             <h3 style="font-size:15px">🔥 Firebase Cloud Integration</h3>
-            <span class="status" id="firebaseStatusBadge" style="background:#fff8e6;color:#775d20"><span class="dot"></span> <span id="firebaseStatusText">Checking Firebase…</span></span>
+            <div class="muted">Link your Firebase project to enable Firebase Authentication and Firestore remote sync.</div>
           </div>
-          <p class="muted" style="margin-bottom:12px">
-            Link your Firebase project to enable Firebase Authentication, Firestore cloud sync, and remote telemetry.
-          </p>
-          <div style="margin-bottom:10px">
-            <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">1. Firebase Web Config (Client App):</label>
-            <textarea id="firebaseConfigInput" class="search" style="width:100%;height:110px;font-family:monospace;font-size:12px" placeholder='Paste full snippet from Firebase, e.g.:&#10;const firebaseConfig = {&#10;  apiKey: "...",&#10;  projectId: "...",&#10;  ...&#10;};'></textarea>
-          </div>
-          <button class="btn primary" onclick="handleSaveFirebaseConfig()">Save Firebase Config</button>
+          <span class="status" id="firebaseStatusBadge" style="background:#fff8e6;color:#775d20"><span class="dot"></span> <span id="firebaseStatusText">Checking Firebase…</span></span>
+        </div>
+        <div style="margin-bottom:10px;margin-top:14px">
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">1. Firebase Web Config (Client App):</label>
+          <textarea id="firebaseConfigInput" class="search" style="width:100%;height:110px;font-family:monospace;font-size:12px" placeholder='Paste full snippet from Firebase, e.g.:&#10;const firebaseConfig = {&#10;  apiKey: "...",&#10;  projectId: "...",&#10;  ...&#10;};'></textarea>
+        </div>
+        <button class="btn primary" onclick="handleSaveFirebaseConfig()">Save Firebase Config</button>
 
-          <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)">
-            <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">2. Backend Service Account Key (Optional - for Cloud Firestore sync):</label>
-            <div style="margin-bottom:8px">
-              <input type="file" id="serviceAccountFileInput" accept=".json" style="font-size:12px" onchange="handleServiceAccountFileSelected(event)" />
-            </div>
-            <textarea id="firebaseServiceAccountInput" class="search" style="width:100%;height:70px;font-family:monospace;font-size:12px" placeholder='Or paste the downloaded JSON text here...'></textarea>
-            <button class="btn" style="margin-top:8px" onclick="handleSaveServiceAccount()">Activate Backend Cloud Sync</button>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)">
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">2. Backend Service Account Key (Optional - for Cloud Firestore sync):</label>
+          <div style="margin-bottom:8px">
+            <input type="file" id="serviceAccountFileInput" accept=".json" style="font-size:12px" onchange="handleServiceAccountFileSelected(event)" />
           </div>
+          <textarea id="firebaseServiceAccountInput" class="search" style="width:100%;height:70px;font-family:monospace;font-size:12px" placeholder='Or paste the downloaded JSON text here...'></textarea>
+          <button class="btn" style="margin-top:8px" onclick="handleSaveServiceAccount()">Activate Backend Cloud Sync</button>
         </div>
       </div>
     </section>
@@ -988,6 +1078,10 @@ function showSection(sectionId, clickedButton) {
 
   if (sectionId === "storage") loadFiles(currentPath);
   if (sectionId === "activity") loadActivity();
+  if (sectionId === "settings") {
+    loadDeviceConfig();
+    checkFirebaseIntegration();
+  }
   if (sectionId === "dashboard") {
     loadStatus();
     loadFiles("/");
@@ -1029,7 +1123,26 @@ async function loadStatus() {
     if (!response.ok) throw new Error("Failed to fetch device status");
     const data = await response.json();
 
-    setStatus(data.online);
+    const isOnline = Boolean(data.online);
+    setStatus(isOnline);
+
+    const badge = document.getElementById("statusBadge");
+    const text = document.getElementById("statusText");
+
+    if (data.agent_connected) {
+      if (badge && text) {
+        badge.style.background = "#eaf8f1";
+        badge.style.color = "#159957";
+        text.textContent = "PHYSICAL GATEWAY ONLINE";
+      }
+    } else if (data.source === 'cloud_profile') {
+      if (badge && text) {
+        badge.style.background = "#eaf8f1";
+        badge.style.color = "#159957";
+        text.textContent = "CLOUD GATEWAY ONLINE";
+      }
+    }
+
     document.getElementById("storageValue").textContent =
       data.used_bytes != null && data.total_bytes != null
         ? `${formatBytes(data.used_bytes)} / ${formatBytes(data.total_bytes)}`
@@ -1046,12 +1159,150 @@ async function loadStatus() {
     if (document.getElementById("settingsHost")) document.getElementById("settingsHost").textContent = data.device_id || "—";
     if (document.getElementById("settingsCpu")) document.getElementById("settingsCpu").textContent = data.hardware || "—";
     if (document.getElementById("settingsIp")) document.getElementById("settingsIp").textContent = data.network || "—";
+    if (document.getElementById("settingsDriveType")) document.getElementById("settingsDriveType").textContent = data.storage_type || "—";
     if (document.getElementById("settingsTotalDisk")) document.getElementById("settingsTotalDisk").textContent = formatBytes(data.total_bytes);
     if (document.getElementById("settingsFreeDisk")) document.getElementById("settingsFreeDisk").textContent = formatBytes(data.free_bytes);
+    if (document.getElementById("settingsTelemetrySource")) {
+      const sourceMap = {
+        'physical_agent': '🟢 Live Physical Agent Stream',
+        'cloud_profile': '🌐 Cloud Gateway Profile',
+        'configured': '⚙️ Custom Configured Profile',
+        'local_os': '💻 Local OS Hardware'
+      };
+      document.getElementById("settingsTelemetrySource").textContent = sourceMap[data.source] || (data.source || "Active");
+    }
+
+    // Update Gateway Mode badge in Settings
+    const modeBadge = document.getElementById("gatewayModeBadge");
+    const modeText = document.getElementById("gatewayModeText");
+    if (modeBadge && modeText) {
+      if (data.agent_connected) {
+        modeBadge.style.background = "#eaf8f1";
+        modeBadge.style.color = "#159957";
+        modeText.textContent = "Physical Hardware Connected";
+      } else {
+        modeBadge.style.background = "#eef4ff";
+        modeBadge.style.color = "#2457ff";
+        modeText.textContent = data.mode || "Cloud Gateway Online";
+      }
+    }
   } catch (err) {
     console.error("Status load error:", err);
     setStatus(false);
   }
+}
+
+// Load and manage custom device profile
+async function loadDeviceConfig() {
+  try {
+    const res = await fetch("/api/device/config");
+    if (!res.ok) return;
+    const data = await res.json();
+    const cfg = data.config || {};
+
+    if (document.getElementById("cfgDeviceId")) document.getElementById("cfgDeviceId").value = cfg.device_id || "";
+    if (document.getElementById("cfgDeviceName")) document.getElementById("cfgDeviceName").value = cfg.device_name || "";
+    if (document.getElementById("cfgHardware")) document.getElementById("cfgHardware").value = cfg.hardware || "";
+    if (document.getElementById("cfgNetwork")) document.getElementById("cfgNetwork").value = cfg.network || "";
+    if (document.getElementById("cfgStorageType")) document.getElementById("cfgStorageType").value = cfg.storage_type || "";
+    if (document.getElementById("cfgTotalGb")) document.getElementById("cfgTotalGb").value = Math.round((cfg.total_bytes || 536870912000) / (1024 * 1024 * 1024));
+    if (document.getElementById("cfgUsedGb")) document.getElementById("cfgUsedGb").value = Math.round((cfg.used_bytes || 147111280640) / (1024 * 1024 * 1024));
+
+    // Cloud Notice
+    const cloudNotice = document.getElementById("cloudDeployNotice");
+    if (cloudNotice) {
+      cloudNotice.style.display = data.isCloud ? "block" : "none";
+    }
+
+    // Agent status badge in Settings
+    const agentBadge = document.getElementById("agentStatusBadge");
+    const agentText = document.getElementById("agentStatusText");
+    if (agentBadge && agentText) {
+      if (data.agentConnected) {
+        agentBadge.style.background = "#eaf8f1";
+        agentBadge.style.color = "#159957";
+        agentText.textContent = "🟢 Live Connected (Streaming USB)";
+      } else {
+        agentBadge.style.background = "#fff8e6";
+        agentBadge.style.color = "#775d20";
+        agentText.textContent = "⚪ Waiting for Agent";
+      }
+    }
+
+    // Dynamic snippet with current origin
+    const origin = window.location.origin;
+    const snippetEl = document.getElementById("agentCmdSnippet");
+    if (snippetEl) {
+      snippetEl.textContent = `node gateway-agent.js --cloud ${origin} --storage E:\\`;
+    }
+  } catch (e) {
+    console.error("Failed to load device config:", e);
+  }
+}
+
+async function handleSaveDeviceConfig() {
+  const token = getToken();
+  if (!token) {
+    openAuthModal("login");
+    showToast("Please sign in to save device settings", false);
+    return;
+  }
+
+  const payload = {
+    device_id: document.getElementById("cfgDeviceId").value.trim(),
+    device_name: document.getElementById("cfgDeviceName").value.trim(),
+    hardware: document.getElementById("cfgHardware").value.trim(),
+    network: document.getElementById("cfgNetwork").value.trim(),
+    storage_type: document.getElementById("cfgStorageType").value.trim(),
+    total_gb: parseFloat(document.getElementById("cfgTotalGb").value) || 500,
+    used_gb: parseFloat(document.getElementById("cfgUsedGb").value) || 137
+  };
+
+  const statusEl = document.getElementById("cfgSaveStatus");
+  if (statusEl) statusEl.textContent = "Saving…";
+
+  try {
+    const res = await fetch("/api/device/config", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update device configuration");
+
+    showToast("Device Profile updated successfully!");
+    if (statusEl) statusEl.textContent = "✓ Saved";
+    setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
+
+    loadStatus();
+    loadDeviceConfig();
+  } catch (err) {
+    showToast(err.message, false);
+    if (statusEl) statusEl.textContent = "Error saving";
+  }
+}
+
+function resetDeviceConfigDefaults() {
+  document.getElementById("cfgDeviceId").value = "SMARTDRIVE-GW-01";
+  document.getElementById("cfgDeviceName").value = "SmartDrive Hardware Gateway";
+  document.getElementById("cfgHardware").value = "SmartDrive Hub v2.4 (Quad-Core Cortex-A72)";
+  document.getElementById("cfgNetwork").value = "Gigabit LAN (192.168.1.105)";
+  document.getElementById("cfgStorageType").value = "USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)";
+  document.getElementById("cfgTotalGb").value = "500";
+  document.getElementById("cfgUsedGb").value = "137";
+  handleSaveDeviceConfig();
+}
+
+function copyAgentCommand() {
+  const snippet = document.getElementById("agentCmdSnippet").textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(snippet);
+  }
+  showToast("Gateway Agent command copied to clipboard!");
 }
 
 // Load real files
@@ -1423,6 +1674,7 @@ if (!getToken()) {
 
 // Initial Boot
 checkFirebaseIntegration();
+loadDeviceConfig();
 loadStatus();
 loadFiles("/");
 loadActivity();
