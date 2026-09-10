@@ -1,0 +1,74 @@
+[
+  {
+    "id": "act_1789024593119",
+    "title": "File Downloaded",
+    "description": "'ANNEXURE 11 approved nomenclature of courses.pdf' downloaded from storage",
+    "timestamp": "2026-09-10T07:16:33.119Z",
+    "type": "file",
+    "icon": "⬇️"
+  },
+  {
+    "id": "act_1789024554511",
+    "title": "Storage Root Changed",
+    "description": "Storage location mounted to: C:\\Users\\NMIET\\Desktop",
+    "timestamp": "2026-09-10T07:15:54.511Z",
+    "type": "storage",
+    "icon": "💾"
+  },
+  {
+    "id": "act_1789023755779",
+    "title": "File Downloaded",
+    "description": "'omkar' downloaded from storage",
+    "timestamp": "2026-09-10T07:02:35.779Z",
+    "type": "file",
+    "icon": "⬇️"
+  },
+  {
+    "id": "act_1789023737187",
+    "title": "File Downloaded",
+    "description": "'omkar' downloaded from storage",
+    "timestamp": "2026-09-10T07:02:17.187Z",
+    "type": "file",
+    "icon": "⬇️"
+  },
+  {
+    "id": "act_1789023734702",
+    "title": "File Uploaded",
+    "description": "'omkar' (94.8 KB) uploaded by Sanchita Gaikwad to /omkar",
+    "timestamp": "2026-09-10T07:02:14.702Z",
+    "type": "file",
+    "icon": "⬆️"
+  },
+  {
+    "id": "act_1789023644941",
+    "title": "Folder Created",
+    "description": "Directory 'omkar' created in /",
+    "timestamp": "2026-09-10T07:00:44.941Z",
+    "type": "folder",
+    "icon": "📁"
+  },
+  {
+    "id": "act_1789020909471",
+    "title": "User Registered",
+    "description": "New user 'Sanchita Gaikwad' registered to Smart Hub",
+    "timestamp": "2026-09-10T06:15:09.471Z",
+    "type": "auth",
+    "icon": "👤"
+  },
+  {
+    "id": "act_1789020653192",
+    "title": "Folder Created",
+    "description": "Directory 'Projects' created in /",
+    "timestamp": "2026-09-10T06:10:53.192Z",
+    "type": "folder",
+    "icon": "📁"
+  },
+  {
+    "id": "act_1789020653176",
+    "title": "User Logged In",
+    "description": "User 'admin' authenticated with JWT",
+    "timestamp": "2026-09-10T06:10:53.176Z",
+    "type": "auth",
+    "icon": "🔑"
+  }
+]

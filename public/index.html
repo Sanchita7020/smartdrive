@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartDrive</title>
+<style>
+:root{
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --text:#172033;
+  --muted:#6d7687;
+  --line:#e3e8f0;
+  --accent:#2457ff;
+  --accent-soft:#edf2ff;
+  --success:#159957;
+  --danger:#d84b4b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+button,input{font:inherit}
+button{cursor:pointer}
+header{
+  height:72px;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 34px;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:40px;height:40px;border-radius:12px;
+  background:var(--accent);color:white;
+  display:grid;place-items:center;font-weight:800;
+}
+.brand h1{margin:0;font-size:18px}
+.brand p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.profile{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-weight:700;
+  cursor:pointer;
+}
+.profile-info{display:flex;align-items:center;gap:10px}
+.layout{
+  max-width:1280px;
+  margin:auto;
+  padding:28px 24px 50px;
+  display:grid;
+  grid-template-columns:240px 1fr;
+  gap:24px;
+}
+aside{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  height:max-content;
+}
+.nav-item{
+  width:100%;
+  border:0;
+  background:transparent;
+  text-align:left;
+  padding:13px 14px;
+  border-radius:10px;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+.nav-item.active,.nav-item:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+}
+.hero{
+  background:linear-gradient(135deg,#fff,#f3f6ff);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:28px;
+  margin-bottom:20px;
+}
+.hero-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:20px;
+}
+.hero h2{margin:0 0 8px;font-size:30px}
+.hero p{
+  margin:0;
+  max-width:700px;
+  color:var(--muted);
+  line-height:1.6;
+}
+.status{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 12px;
+  border-radius:999px;
+  background:#eaf8f1;
+  color:var(--success);
+  font-size:13px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.dot{width:8px;height:8px;background:currentColor;border-radius:50%}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:24px;
+}
+.stat{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+}
+.stat label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}
+.stat strong{font-size:21px}
+.grid{
+  display:grid;
+  grid-template-columns:1.25fr .75fr;
+  gap:20px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:20px;
+}
+.card-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:16px;
+}
+.card-title h3{margin:0;font-size:17px}
+.muted{color:var(--muted);font-size:13px}
+.btn{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:550;
+  transition:all 0.15s ease;
+}
+.btn:hover{
+  background:#f8fafd;
+  border-color:#d0d7e5;
+}
+.btn.primary{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+.btn.primary:hover{
+  background:#1a45d8;
+}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+.search{
+  flex:1;
+  min-width:180px;
+  border:1px solid var(--line);
+  background:#fbfcfe;
+  border-radius:10px;
+  padding:10px 12px;
+  outline:none;
+}
+.search:focus{border-color:var(--accent)}
+.breadcrumb{
+  margin:16px 0 12px;
+  color:var(--muted);
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.breadcrumb a{
+  color:var(--accent);
+  text-decoration:none;
+  cursor:pointer;
+  font-weight:600;
+}
+.breadcrumb a:hover{
+  text-decoration:underline;
+}
+.breadcrumb span.sep{
+  color:var(--muted);
+}
+.file-list{display:flex;flex-direction:column;gap:8px}
+.file-row{
+  display:grid;
+  grid-template-columns:42px 1fr auto auto;
+  gap:12px;
+  align-items:center;
+  padding:12px 10px;
+  border:1px solid transparent;
+  border-radius:12px;
+}
+.file-row:hover{
+  background:#fafbfe;
+  border-color:var(--line);
+}
+.icon{
+  width:38px;height:38px;border-radius:10px;
+  background:var(--accent-soft);
+  display:grid;place-items:center;font-size:18px;
+}
+.file-name{font-weight:650}
+.file-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.file-size{font-size:12px;color:var(--muted)}
+.mini-btn{
+  border:0;
+  background:var(--accent-soft);
+  color:var(--accent);
+  border-radius:9px;
+  padding:8px 12px;
+  font-weight:650;
+  transition:all 0.15s ease;
+}
+.mini-btn:hover{
+  background:#dbe6ff;
+}
+.device-box{
+  background:#fbfcff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+}
+.device-line{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 0;
+  font-size:14px;
+}
+.device-line span{color:var(--muted)}
+.activity{display:flex;flex-direction:column;gap:14px}
+.activity-item{display:flex;gap:12px;align-items:flex-start}
+.activity-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:var(--accent-soft);
+  display:grid;place-items:center;
+  font-size:15px;
+  flex-shrink:0;
+}
+.activity-item strong{display:block;font-size:13px;margin-bottom:2px}
+.activity-item small{color:var(--muted);font-size:12px;line-height:1.4}
+.activity-time{font-size:11px;color:var(--muted);margin-top:2px}
+.empty{
+  border:1px dashed var(--line);
+  border-radius:12px;
+  text-align:center;
+  padding:34px 20px;
+  color:var(--muted);
+}
+.notice{
+  padding:14px;
+  border-radius:12px;
+  background:#fff8e6;
+  border:1px solid #f0dfb1;
+  color:#775d20;
+  font-size:13px;
+  line-height:1.5;
+}
+.notice.success{
+  background:#eaf8f1;
+  border-color:#b9ecd1;
+  color:#159957;
+}
+
+/* Modal styles conforming strictly to the design system */
+.modal-overlay{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(23,32,51,0.45);
+  backdrop-filter:blur(3px);
+  display:none;
+  place-items:center;
+  z-index:999;
+  padding:20px;
+}
+.modal-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:28px;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 24px 48px rgba(0,0,0,0.12);
+}
+.modal-tabs{
+  display:flex;
+  gap:8px;
+  background:var(--bg);
+  padding:4px;
+  border-radius:12px;
+  margin-bottom:20px;
+}
+.modal-tab{
+  flex:1;
+  border:0;
+  background:transparent;
+  padding:8px 12px;
+  border-radius:8px;
+  font-weight:600;
+  color:var(--muted);
+}
+.modal-tab.active{
+  background:#fff;
+  color:var(--accent);
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text)}
+.form-input{
+  width:100%;
+  border:1px solid var(--line);
+  background:#fbfcfe;
+  border-radius:10px;
+  padding:10px 12px;
+  outline:none;
+}
+.form-input:focus{border-color:var(--accent)}
+.form-error{color:var(--danger);font-size:12px;margin-top:6px;display:none}
+
+/* Toast alert notification */
+.toast{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 18px;
+  box-shadow:0 12px 28px rgba(0,0,0,0.1);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  font-weight:600;
+  z-index:1000;
+  transform:translateY(100px);
+  opacity:0;
+  transition:all 0.25s ease;
+}
+.toast.show{
+  transform:translateY(0);
+  opacity:1;
+}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr}
+  .hero-top{flex-direction:column}
+  aside{height:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">S</div>
+    <div>
+      <h1>SmartDrive</h1>
+      <p>Your physical storage, remotely accessible.</p>
+    </div>
+  </div>
+
+  <div class="profile" id="userProfileArea">
+    <div class="profile-info" id="profileLoggedIn" style="display:none">
+      <span id="profileUsername">admin</span>
+      <div class="avatar" id="profileAvatar" title="Active user">A</div>
+      <button class="mini-btn" style="background:#fff;border:1px solid var(--line)" onclick="handleLogout()">Sign Out</button>
+    </div>
+    <div id="profileLoggedOut">
+      <button class="btn primary" onclick="openAuthModal('login')">Sign In</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside>
+    <button class="nav-item active" onclick="showSection('dashboard', this)">⌂ Dashboard</button>
+    <button class="nav-item" onclick="showSection('storage', this)">▣ My Storage</button>
+    <button class="nav-item" onclick="showSection('activity', this)">◷ Activity</button>
+    <button class="nav-item" onclick="showSection('settings', this)">⚙ Settings</button>
+  </aside>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <h2>SmartDrive</h2>
+            <p>
+              A hardware gateway that connects physical storage to your network.
+              The live device data, storage information and file contents are supplied in real time.
+            </p>
+          </div>
+          <div id="statusBadge" class="status">
+            <span class="dot"></span>
+            <span id="statusText">Checking system…</span>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <label>Storage</label>
+            <strong id="storageValue">—</strong>
+          </div>
+
+          <div class="stat">
+            <label>Connection</label>
+            <strong id="connectionValue">—</strong>
+          </div>
+
+          <div class="stat">
+            <label>Device ID</label>
+            <strong id="deviceIdValue">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h3>My Storage</h3>
+              <div class="muted">Live contents from the connected storage device.</div>
+            </div>
+            <button class="btn primary" onclick="showSection('storage', document.querySelectorAll('.nav-item')[1])">
+              Open Storage
+            </button>
+          </div>
+
+          <div id="dashboardStorage" class="empty">
+            Loading storage files…
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <h3>Device</h3>
+              <span class="status"><span class="dot"></span> <span id="deviceStatusMini">Online</span></span>
+            </div>
+
+            <div class="device-box">
+              <div class="device-line"><span>Hardware</span><strong id="hardwareValue">—</strong></div>
+              <div class="device-line"><span>Storage</span><strong id="storageTypeValue">—</strong></div>
+              <div class="device-line"><span>Network</span><strong id="networkValue">—</strong></div>
+              <div class="device-line"><span>Mode</span><strong id="modeValue">—</strong></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <h3>Recent Activity</h3>
+            </div>
+            <div id="dashboardActivity" class="empty">
+              No recent events yet.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- STORAGE -->
+    <section id="storage" style="display:none">
+      <div class="card">
+        <div class="card-title">
+          <div>
+            <h3>My Storage</h3>
+            <div class="muted">Files are loaded from the connected storage device.</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn" onclick="requestNewFolder()">＋ New Folder</button>
+            <button class="btn" onclick="requestRefresh()">↻ Refresh</button>
+            <button class="btn primary" onclick="requestUpload()">＋ Upload</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <input id="searchInput" class="search" placeholder="Search files..." />
+        </div>
+
+        <div id="breadcrumb" class="breadcrumb">Home</div>
+
+        <div id="fileList" class="file-list">
+          <div class="empty">Loading storage contents…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTIVITY -->
+    <section id="activity" style="display:none">
+      <div class="card">
+        <div class="card-title">
+          <div>
+            <h3>Activity Log</h3>
+            <div class="muted">Live events received from the backend/device.</div>
+          </div>
+          <button class="btn" onclick="loadActivity()">↻ Refresh Log</button>
+        </div>
+
+        <div id="fullActivity" class="activity">
+          <div class="empty">No activity recorded yet. Events will appear as you sign in, upload files, and navigate storage.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settings" style="display:none">
+      <div class="card">
+        <div class="card-title">
+          <h3>Prototype Settings</h3>
+        </div>
+
+        <div class="notice success" style="margin-bottom:18px">
+          ✓ Real System Connected: Real hardware telemetry, live disk space, and JWT authentication are active.
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="device-line"><span>Host Machine</span><strong id="settingsHost">—</strong></div>
+          <div class="device-line"><span>Processor</span><strong id="settingsCpu">—</strong></div>
+          <div class="device-line"><span>Network IP</span><strong id="settingsIp">—</strong></div>
+          <div class="device-line"><span>Total Disk Space</span><strong id="settingsTotalDisk">—</strong></div>
+          <div class="device-line"><span>Available Free Space</span><strong id="settingsFreeDisk">—</strong></div>
+          <div class="device-line"><span>Storage Directory</span><strong id="settingsStoragePath" style="font-size:12px;word-break:break-all">./hub_storage</strong></div>
+          <div class="device-line"><span>Current JWT Session</span><strong id="jwtStatusBadge" style="font-size:12px;color:var(--accent)">Active</strong></div>
+        </div>
+
+        <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+          <div class="card-title">
+            <h3 style="font-size:15px">Mount Custom Drive or Directory</h3>
+          </div>
+          <p class="muted" style="margin-bottom:12px">Point the hub storage to an external USB drive letter (e.g. <code>E:\</code>) or any local folder on this machine.</p>
+          <div style="display:flex;gap:10px">
+            <input id="mountInput" class="search" placeholder="e.g. E:\ or C:\Users\NMIET\Documents" />
+            <button class="btn primary" onclick="handleMountStorage()">Mount Path</button>
+          </div>
+        </div>
+        <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+          <div class="card-title">
+            <h3 style="font-size:15px">🔥 Firebase Cloud Integration</h3>
+            <span class="status" id="firebaseStatusBadge" style="background:#fff8e6;color:#775d20"><span class="dot"></span> <span id="firebaseStatusText">Checking Firebase…</span></span>
+          </div>
+          <p class="muted" style="margin-bottom:12px">
+            Link your Firebase project to enable Firebase Authentication, Firestore cloud sync, and remote telemetry.
+          </p>
+          <div style="margin-bottom:10px">
+            <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">1. Firebase Web Config (Client App):</label>
+            <textarea id="firebaseConfigInput" class="search" style="width:100%;height:110px;font-family:monospace;font-size:12px" placeholder='Paste full snippet from Firebase, e.g.:&#10;const firebaseConfig = {&#10;  apiKey: "...",&#10;  projectId: "...",&#10;  ...&#10;};'></textarea>
+          </div>
+          <button class="btn primary" onclick="handleSaveFirebaseConfig()">Save Firebase Config</button>
+
+          <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)">
+            <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">2. Backend Service Account Key (Optional - for Cloud Firestore sync):</label>
+            <div style="margin-bottom:8px">
+              <input type="file" id="serviceAccountFileInput" accept=".json" style="font-size:12px" onchange="handleServiceAccountFileSelected(event)" />
+            </div>
+            <textarea id="firebaseServiceAccountInput" class="search" style="width:100%;height:70px;font-family:monospace;font-size:12px" placeholder='Or paste the downloaded JSON text here...'></textarea>
+            <button class="btn" style="margin-top:8px" onclick="handleSaveServiceAccount()">Activate Backend Cloud Sync</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Hidden File Upload Input -->
+<input type="file" id="hiddenFileInput" style="display:none" onchange="handleFileSelected(event)" />
+
+<!-- Auth Modal (Sign In / Sign Up) -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0;font-size:18px" id="authModalTitle">Sign In</h3>
+      <button onclick="closeAuthModal()" style="border:0;background:transparent;font-size:20px;color:var(--muted)">&times;</button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="modal-tab" id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
+    </div>
+
+    <div id="authNotice" class="notice" style="margin-bottom:16px;font-size:12px">
+      Sign in to upload files and manage storage. Default: <strong>admin</strong> / <strong>admin123</strong>
+    </div>
+
+    <form id="authForm" onsubmit="handleAuthSubmit(event)">
+      <div class="form-group">
+        <label>Username / Email</label>
+        <input type="text" id="authUsername" class="form-input" placeholder="e.g. admin or user@gmail.com" required />
+      </div>
+
+      <div class="form-group" id="emailGroup" style="display:none">
+        <label>Email</label>
+        <input type="email" id="authEmail" class="form-input" placeholder="e.g. user@gmail.com" />
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="authPassword" class="form-input" placeholder="••••••••" required />
+      </div>
+
+      <div id="authError" class="form-error"></div>
+
+      <button type="submit" class="btn primary" style="width:100%;margin-top:14px" id="authSubmitBtn">
+        Sign In
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMessage">Success</span>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+let currentPath = "/";
+let currentFilesData = [];
+let authMode = "login";
+let isFirebaseReady = false;
+let fbAuth = null;
+let fbDb = null;
+
+const TOKEN_KEY = "smart_hub_jwt";
+const USER_KEY = "smart_hub_user";
+
+async function checkFirebaseIntegration() {
+  const badge = document.getElementById("firebaseStatusBadge");
+  const text = document.getElementById("firebaseStatusText");
+  const textarea = document.getElementById("firebaseConfigInput");
+
+  try {
+    const res = await fetch("/api/firebase/config");
+    const data = await res.json();
+
+    if (data.clientConfig) {
+      if (textarea) textarea.value = JSON.stringify(data.clientConfig, null, 2);
+      if (!firebase.apps.length) {
+        firebase.initializeApp(data.clientConfig);
+      }
+      fbAuth = firebase.auth();
+      fbDb = firebase.firestore();
+      isFirebaseReady = true;
+
+      if (badge && text) {
+        badge.style.background = "#eaf8f1";
+        badge.style.color = "#159957";
+        text.textContent = data.backendConfigured ? "Firebase Active (Cloud Synced)" : "Client SDK Connected";
+      }
+    } else {
+      if (badge && text) {
+        badge.style.background = "#fff8e6";
+        badge.style.color = "#775d20";
+        text.textContent = "Ready for Setup";
+      }
+    }
+  } catch (e) {
+    if (text) text.textContent = "Local Mode";
+  }
+}
+
+function parseFirebaseInput(text) {
+  if (!text) throw new Error("Please enter your Firebase config");
+  text = text.trim();
+
+  // 1. Try standard JSON first
+  try {
+    return JSON.parse(text);
+  } catch (e) {}
+
+  // 2. Extract block between first { and last }
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    const snippet = text.substring(start, end + 1);
+    try {
+      const fn = new Function('return (' + snippet + ');');
+      const res = fn();
+      if (res && typeof res === 'object') {
+        return res;
+      }
+    } catch (e) {}
+  }
+
+  // 3. Regex property extraction fallback
+  const keys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId', 'measurementId'];
+  const extracted = {};
+  for (const k of keys) {
+    const m = text.match(new RegExp(`['"]?${k}['"]?\\s*:\\s*['"]([^'"]+)['"]`));
+    if (m) {
+      extracted[k] = m[1];
+    }
+  }
+
+  if (extracted.apiKey && extracted.projectId) {
+    return extracted;
+  }
+
+  throw new Error("Could not parse Firebase snippet. Please ensure 'apiKey' and 'projectId' are present.");
+}
+
+async function handleSaveFirebaseConfig() {
+  const val = document.getElementById("firebaseConfigInput").value.trim();
+  if (!val) {
+    showToast("Please enter a Firebase config object", false);
+    return;
+  }
+  try {
+    const parsed = parseFirebaseInput(val);
+    const res = await fetch("/api/firebase/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed)
+    });
+    if (!res.ok) throw new Error("Failed to save config");
+    showToast("Firebase Config saved successfully!");
+    document.getElementById("firebaseConfigInput").value = JSON.stringify(parsed, null, 2);
+    checkFirebaseIntegration();
+  } catch (err) {
+    showToast(err.message, false);
+  }
+}
+
+async function handleSaveServiceAccount() {
+  const val = document.getElementById("firebaseServiceAccountInput").value.trim();
+  if (!val) {
+    showToast("Please paste your serviceAccountKey.json content", false);
+    return;
+  }
+  try {
+    const parsed = JSON.parse(val);
+    const res = await fetch("/api/firebase/service-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to activate service account");
+    showToast("Backend Firebase Cloud Sync Activated!");
+    document.getElementById("firebaseServiceAccountInput").value = "";
+    checkFirebaseIntegration();
+  } catch (err) {
+    showToast(err.message, false);
+  }
+}
+
+function handleServiceAccountFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const content = event.target.result;
+      document.getElementById("firebaseServiceAccountInput").value = content;
+      await handleSaveServiceAccount();
+    } catch (err) {
+      showToast("Error reading key file: " + err.message, false);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setSession(token, user) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  updateAuthUI();
+}
+
+function clearSession() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  updateAuthUI();
+}
+
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function updateAuthUI() {
+  const token = getToken();
+  const user = getStoredUser();
+  const loggedInDiv = document.getElementById("profileLoggedIn");
+  const loggedOutDiv = document.getElementById("profileLoggedOut");
+  const jwtBadge = document.getElementById("jwtStatusBadge");
+
+  if (token && user) {
+    loggedInDiv.style.display = "flex";
+    loggedOutDiv.style.display = "none";
+    document.getElementById("profileUsername").textContent = user.username || "Account";
+    document.getElementById("profileAvatar").textContent = (user.username || "U")[0].toUpperCase();
+    if (jwtBadge) {
+      jwtBadge.textContent = "Active (User: " + user.username + ")";
+      jwtBadge.style.color = "var(--success)";
+    }
+  } else {
+    loggedInDiv.style.display = "none";
+    loggedOutDiv.style.display = "block";
+    if (jwtBadge) {
+      jwtBadge.textContent = "Not authenticated";
+      jwtBadge.style.color = "var(--muted)";
+    }
+  }
+}
+
+function showToast(message, isSuccess = true) {
+  const toast = document.getElementById("toast");
+  const icon = document.getElementById("toastIcon");
+  const text = document.getElementById("toastMessage");
+
+  icon.textContent = isSuccess ? "✓" : "⚠";
+  icon.style.color = isSuccess ? "var(--success)" : "var(--danger)";
+  text.textContent = message;
+
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+
+function openAuthModal(mode = "login") {
+  authMode = mode;
+  switchAuthTab(mode);
+  document.getElementById("authError").style.display = "none";
+  document.getElementById("authModal").style.display = "grid";
+}
+
+function closeAuthModal() {
+  document.getElementById("authModal").style.display = "none";
+}
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  const tabLogin = document.getElementById("tabLogin");
+  const tabRegister = document.getElementById("tabRegister");
+  const emailGroup = document.getElementById("emailGroup");
+  const submitBtn = document.getElementById("authSubmitBtn");
+  const title = document.getElementById("authModalTitle");
+  const notice = document.getElementById("authNotice");
+
+  if (mode === "login") {
+    tabLogin.classList.add("active");
+    tabRegister.classList.remove("active");
+    emailGroup.style.display = "none";
+    submitBtn.textContent = "Sign In";
+    title.textContent = "Sign In";
+    notice.style.display = "block";
+  } else {
+    tabLogin.classList.remove("active");
+    tabRegister.classList.add("active");
+    emailGroup.style.display = "block";
+    submitBtn.textContent = "Create Account";
+    title.textContent = "Register Account";
+    notice.style.display = "none";
+  }
+  document.getElementById("authError").style.display = "none";
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const email = document.getElementById("authEmail").value.trim();
+  const errorEl = document.getElementById("authError");
+  const submitBtn = document.getElementById("authSubmitBtn");
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Authenticating…";
+  errorEl.style.display = "none";
+
+  try {
+    let token = null;
+    let userPayload = null;
+
+    // Check if Firebase Auth is available and applicable
+    if (isFirebaseReady && fbAuth && (username.includes('@') || email)) {
+      const targetEmail = username.includes('@') ? username : email;
+      try {
+        let userCred;
+        if (authMode === "login") {
+          userCred = await fbAuth.signInWithEmailAndPassword(targetEmail, password);
+        } else {
+          userCred = await fbAuth.createUserWithEmailAndPassword(targetEmail, password);
+        }
+        token = await userCred.user.getIdToken();
+        userPayload = {
+          id: userCred.user.uid,
+          username: userCred.user.email.split('@')[0],
+          email: userCred.user.email,
+          firebase: true
+        };
+      } catch (fbErr) {
+        if (!['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password'].includes(fbErr.code)) {
+          throw fbErr;
+        }
+      }
+    }
+
+    if (!token) {
+      const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const body = authMode === "login" ? { username, password } : { username, email, password };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Authentication failed");
+      }
+      token = data.token;
+      userPayload = data.user;
+    }
+
+    setSession(token, userPayload);
+    closeAuthModal();
+    showToast(`Signed in as ${userPayload.username}`);
+    loadActivity();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = "block";
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = authMode === "login" ? "Sign In" : "Create Account";
+  }
+}
+
+function handleLogout() {
+  clearSession();
+  showToast("Signed out successfully");
+}
+
+function showSection(sectionId, clickedButton) {
+  document.querySelectorAll("main > section").forEach(section => {
+    section.style.display = "none";
+  });
+
+  document.getElementById(sectionId).style.display = "";
+
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  if (clickedButton) clickedButton.classList.add("active");
+
+  if (sectionId === "storage") loadFiles(currentPath);
+  if (sectionId === "activity") loadActivity();
+  if (sectionId === "dashboard") {
+    loadStatus();
+    loadFiles("/");
+    loadActivity();
+  }
+}
+
+function formatBytes(bytes) {
+  if (typeof bytes !== "number" || isNaN(bytes)) return "0 B";
+  if (bytes === 0) return "0 B";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+}
+
+function setStatus(online) {
+  const badge = document.getElementById("statusBadge");
+  const text = document.getElementById("statusText");
+  const mini = document.getElementById("deviceStatusMini");
+
+  if (online) {
+    badge.style.background = "#eaf8f1";
+    badge.style.color = "#159957";
+    text.textContent = "DEVICE ONLINE";
+    mini.textContent = "Online";
+  } else {
+    badge.style.background = "#fff0f0";
+    badge.style.color = "#d84b4b";
+    text.textContent = "DEVICE OFFLINE";
+    mini.textContent = "Offline";
+  }
+}
+
+// Load real device and system status
+async function loadStatus() {
+  try {
+    const response = await fetch("/api/status");
+    if (!response.ok) throw new Error("Failed to fetch device status");
+    const data = await response.json();
+
+    setStatus(data.online);
+    document.getElementById("storageValue").textContent =
+      data.used_bytes != null && data.total_bytes != null
+        ? `${formatBytes(data.used_bytes)} / ${formatBytes(data.total_bytes)}`
+        : "—";
+
+    document.getElementById("connectionValue").textContent = data.network || "—";
+    document.getElementById("deviceIdValue").textContent = data.device_id || "—";
+    document.getElementById("hardwareValue").textContent = data.hardware || "—";
+    document.getElementById("storageTypeValue").textContent = data.storage_type || "—";
+    document.getElementById("networkValue").textContent = data.network || "—";
+    document.getElementById("modeValue").textContent = data.mode || "—";
+
+    // Populate Settings diagnostic lines
+    if (document.getElementById("settingsHost")) document.getElementById("settingsHost").textContent = data.device_id || "—";
+    if (document.getElementById("settingsCpu")) document.getElementById("settingsCpu").textContent = data.hardware || "—";
+    if (document.getElementById("settingsIp")) document.getElementById("settingsIp").textContent = data.network || "—";
+    if (document.getElementById("settingsTotalDisk")) document.getElementById("settingsTotalDisk").textContent = formatBytes(data.total_bytes);
+    if (document.getElementById("settingsFreeDisk")) document.getElementById("settingsFreeDisk").textContent = formatBytes(data.free_bytes);
+  } catch (err) {
+    console.error("Status load error:", err);
+    setStatus(false);
+  }
+}
+
+// Load real files
+async function loadFiles(path = "/") {
+  const container = document.getElementById("fileList");
+  const dashboard = document.getElementById("dashboardStorage");
+
+  try {
+    const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+    if (!response.ok) throw new Error("Failed to fetch storage files");
+    const data = await response.json();
+
+    currentPath = data.path || path;
+    currentFilesData = data.items || [];
+    if (data.storage_root && document.getElementById("settingsStoragePath")) {
+      document.getElementById("settingsStoragePath").textContent = data.storage_root;
+    }
+    renderBreadcrumbs(currentPath);
+    renderFiles(currentFilesData, currentPath);
+  } catch (err) {
+    console.error("Files load error:", err);
+    container.innerHTML = `<div class="empty">Error reading files from device.</div>`;
+    dashboard.innerHTML = `<div class="empty">Error reading files from device.</div>`;
+  }
+}
+
+function renderBreadcrumbs(path) {
+  const breadcrumb = document.getElementById("breadcrumb");
+  if (path === "/" || !path) {
+    breadcrumb.innerHTML = `<strong>Home</strong>`;
+    return;
+  }
+
+  const parts = path.replace(/^\/+|\/+$/g, "").split("/");
+  let html = `<a onclick="navigateToPath('/')">Home</a>`;
+  let accumulated = "";
+
+  parts.forEach((part, index) => {
+    accumulated += "/" + part;
+    html += ` <span class="sep">/</span> `;
+    if (index === parts.length - 1) {
+      html += `<strong>${escapeHtml(part)}</strong>`;
+    } else {
+      const target = accumulated;
+      html += `<a onclick="navigateToPath('${target}')">${escapeHtml(part)}</a>`;
+    }
+  });
+
+  breadcrumb.innerHTML = html;
+}
+
+function navigateToPath(path) {
+  currentPath = path;
+  loadFiles(currentPath);
+}
+
+function renderFiles(items, path) {
+  const container = document.getElementById("fileList");
+  const dashboard = document.getElementById("dashboardStorage");
+
+  const search = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = items.filter(item =>
+    !search || item.name.toLowerCase().includes(search)
+  );
+
+  if (!filtered || filtered.length === 0) {
+    const emptyMsg = search
+      ? "No files match your search."
+      : "No files stored yet. Click '＋ Upload' above to store real files on this hub.";
+    container.innerHTML = `<div class="empty">${emptyMsg}</div>`;
+    if (path === "/") {
+      dashboard.innerHTML = `<div class="empty">${emptyMsg}</div>`;
+    }
+    return;
+  }
+
+  container.innerHTML = filtered.map(item => {
+    const isFolder = item.type === "folder";
+    const iconChar = isFolder ? "📁" : getFileIcon(item.name);
+
+    return `
+      <div class="file-row">
+        <div class="icon">${iconChar}</div>
+        <div>
+          <div class="file-name">${escapeHtml(item.name)}</div>
+          <div class="file-meta">${isFolder ? "Directory" : "File • " + formatBytes(item.size_bytes)}</div>
+        </div>
+        <div class="file-size">
+          ${isFolder ? "Folder" : formatBytes(item.size_bytes)}
+        </div>
+        <div>
+          ${
+            isFolder
+            ? `<button class="mini-btn" onclick="openFolder('${encodeURIComponent(item.name)}')">Open</button>`
+            : `<button class="mini-btn" onclick="downloadFile('${encodeURIComponent(item.name)}')">Download</button>`
+          }
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if (path === "/" || dashboard) {
+    dashboard.innerHTML = filtered.slice(0, 5).map(item => {
+      const isFolder = item.type === "folder";
+      const iconChar = isFolder ? "📁" : getFileIcon(item.name);
+
+      return `
+        <div class="file-row">
+          <div class="icon">${iconChar}</div>
+          <div>
+            <div class="file-name">${escapeHtml(item.name)}</div>
+            <div class="file-meta">${isFolder ? "Folder" : formatBytes(item.size_bytes)}</div>
+          </div>
+          <div></div>
+          <button class="mini-btn" onclick="${isFolder
+            ? `openFolder('${encodeURIComponent(item.name)}')`
+            : `downloadFile('${encodeURIComponent(item.name)}')`}">
+            ${isFolder ? "Open" : "Download"}
+          </button>
+        </div>
+      `;
+    }).join("");
+  }
+}
+
+function getFileIcon(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  if (['bin', 'hex', 'iso', 'rom', 'zip', 'rar', 'tar', 'gz'].includes(ext)) return "📦";
+  if (['pdf', 'doc', 'docx', 'txt', 'md'].includes(ext)) return "📄";
+  if (['csv', 'xlsx', 'json', 'xml'].includes(ext)) return "📊";
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return "🖼️";
+  if (['log'].includes(ext)) return "📝";
+  if (['mp3', 'wav', 'flac'].includes(ext)) return "🎵";
+  if (['mp4', 'mkv', 'avi'].includes(ext)) return "🎬";
+  return "📄";
+}
+
+function openFolder(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  currentPath = currentPath === "/" ? "/" + name : currentPath + "/" + name;
+  loadFiles(currentPath);
+}
+
+function downloadFile(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  const fullPath = currentPath === "/" ? "/" + name : currentPath + "/" + name;
+  const downloadUrl = `/api/download?path=${encodeURIComponent(fullPath)}`;
+
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.setAttribute("download", name);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  showToast(`Downloading ${name}…`);
+  setTimeout(loadActivity, 1000);
+}
+
+function requestUpload() {
+  const token = getToken();
+  if (!token) {
+    openAuthModal("login");
+    showToast("Please sign in to upload files", false);
+    return;
+  }
+  document.getElementById("hiddenFileInput").click();
+}
+
+async function handleFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const token = getToken();
+  if (!token) {
+    openAuthModal("login");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  showToast(`Uploading ${file.name}…`);
+
+  try {
+    const res = await fetch(`/api/upload?path=${encodeURIComponent(currentPath)}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        clearSession();
+        openAuthModal("login");
+        throw new Error("Session expired. Please sign in again.");
+      }
+      throw new Error(data.error || "Upload failed");
+    }
+
+    showToast(`Successfully uploaded ${file.name}`);
+    loadFiles(currentPath);
+    loadStatus();
+    loadActivity();
+  } catch (err) {
+    showToast(err.message, false);
+  } finally {
+    event.target.value = "";
+  }
+}
+
+async function requestNewFolder() {
+  const token = getToken();
+  if (!token) {
+    openAuthModal("login");
+    showToast("Please sign in to create folders", false);
+    return;
+  }
+
+  const folderName = prompt("Enter new folder name:");
+  if (!folderName || !folderName.trim()) return;
+
+  try {
+    const res = await fetch("/api/folders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        path: currentPath,
+        name: folderName.trim()
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create folder");
+
+    showToast(`Folder '${folderName.trim()}' created`);
+    loadFiles(currentPath);
+    loadActivity();
+  } catch (err) {
+    showToast(err.message, false);
+  }
+}
+
+async function handleMountStorage() {
+  const token = getToken();
+  if (!token) {
+    openAuthModal("login");
+    showToast("Please sign in to configure storage path", false);
+    return;
+  }
+
+  const targetPath = document.getElementById("mountInput").value.trim();
+  if (!targetPath) return;
+
+  try {
+    const res = await fetch("/api/storage/target", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ targetPath })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to mount path");
+
+    showToast(`Storage mounted to ${data.storage_root}`);
+    currentPath = "/";
+    loadFiles("/");
+    loadStatus();
+    loadActivity();
+  } catch (err) {
+    showToast(err.message, false);
+  }
+}
+
+async function loadActivity() {
+  const dashboard = document.getElementById("dashboardActivity");
+  const full = document.getElementById("fullActivity");
+
+  try {
+    const res = await fetch("/api/activity");
+    if (!res.ok) throw new Error("Failed to load activity");
+    const data = await res.json();
+    const items = data.items || [];
+
+    if (items.length === 0) {
+      dashboard.innerHTML = `<div class="empty">No recent activity recorded yet.</div>`;
+      full.innerHTML = `<div class="empty">No activity recorded yet. Events will appear as you sign in, upload files, and navigate storage.</div>`;
+      return;
+    }
+
+    const renderItem = (item) => `
+      <div class="activity-item">
+        <div class="activity-icon">${item.icon || "⚡"}</div>
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          <small>${escapeHtml(item.description)}</small>
+          <div class="activity-time">${formatTime(item.timestamp)}</div>
+        </div>
+      </div>
+    `;
+
+    dashboard.innerHTML = items.slice(0, 4).map(renderItem).join("");
+    full.innerHTML = items.map(renderItem).join("");
+  } catch (err) {
+    console.error("Activity load error:", err);
+  }
+}
+
+function formatTime(isoString) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffSecs = Math.floor((now - date) / 1000);
+
+  if (diffSecs < 60) return "Just now";
+  if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)} mins ago`;
+  if (diffSecs < 86400) return `${Math.floor(diffSecs / 3600)} hours ago`;
+  return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function requestRefresh() {
+  loadStatus();
+  loadFiles(currentPath);
+  loadActivity();
+  showToast("Storage refreshed");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+document.getElementById("searchInput").addEventListener("input", () => {
+  renderFiles(currentFilesData, currentPath);
+});
+
+// Seed session with admin if not logged in
+if (!getToken()) {
+  (async () => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "admin", password: "admin123" })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSession(data.token, data.user);
+      }
+    } catch (e) {}
+    updateAuthUI();
+  })();
+} else {
+  updateAuthUI();
+}
+
+// Initial Boot
+checkFirebaseIntegration();
+loadStatus();
+loadFiles("/");
+loadActivity();
+
+// Periodic live status polling every 10 seconds
+setInterval(() => {
+  loadStatus();
+}, 10000);
+</script>
+
+</body>
+</html>

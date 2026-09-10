@@ -1,0 +1,23 @@
+[
+  {
+    "id": "usr_1789020133206",
+    "username": "admin",
+    "email": "admin@smarthub.local",
+    "password": "$2a$10$6lHQnFVEhVAm.qptSKdCzeLYzI62DbkPRLXKqsduTYaw52nLty9ku",
+    "createdAt": "2026-09-10T06:02:13.206Z"
+  },
+  {
+    "id": "usr_1789020168425",
+    "username": "technician",
+    "email": "tech@smarthub.local",
+    "password": "$2a$10$tcF.bO/XxLMo0Yx4C4vpGOrIon0pGZnOVYzqPmJXqyuqCMxJaDQye",
+    "createdAt": "2026-09-10T06:02:48.425Z"
+  },
+  {
+    "id": "usr_1789020909469",
+    "username": "Sanchita Gaikwad",
+    "email": "oksasane.07@gmail.com",
+    "password": "$2a$10$wyvmxpRrOBNImFdNFOLU5eOFWzrVFWHIzmRo6u9EOpIouMTDHe3Ae",
+    "createdAt": "2026-09-10T06:15:09.469Z"
+  }
+]

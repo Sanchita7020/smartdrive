@@ -1,0 +1,7 @@
+node_modules/
+config/serviceAccountKey.json
+hub_storage/
+*.log
+.env
+.DS_Store
+Thumbs.db
