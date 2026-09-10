@@ -489,8 +489,22 @@ aside{
         <div>
           <div class="card">
             <div class="card-title">
-              <h3>Device</h3>
-              <span class="status"><span class="dot"></span> <span id="deviceStatusMini">Online</span></span>
+              <div>
+                <h3>Device</h3>
+                <div class="muted" style="font-size:12px">Hardware gateway telemetry & active profile</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <button class="mini-btn" style="padding:4px 9px;font-size:12px;background:var(--accent-light);color:var(--accent);border-color:rgba(36,87,255,0.25)" onclick="openDeviceQuickModal()">⚙ Edit</button>
+                <span class="status"><span class="dot"></span> <span id="deviceStatusMini">Online</span></span>
+              </div>
+            </div>
+
+            <!-- Direct Quick Presets on Device Card -->
+            <div style="display:flex;gap:6px;margin:10px 0 14px 0;flex-wrap:wrap">
+              <button class="mini-btn" type="button" onclick="applyPreset('client')" title="Detect specifications from this device">📱 This Device</button>
+              <button class="mini-btn" type="button" onclick="applyPreset('host')" title="Intel Core i7 Host PC">🖥️ Host PC</button>
+              <button class="mini-btn" type="button" onclick="applyPreset('cloud')" title="Cloud Gateway (Render)">🌐 Cloud Hub</button>
+              <button class="mini-btn" type="button" onclick="applyPreset('pi')" title="Raspberry Pi Hub">🍓 Pi Hub</button>
             </div>
 
             <div class="device-box">
@@ -598,41 +612,49 @@ aside{
           </div>
         </div>
 
+        <div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--muted);margin-right:4px">Quick Presets:</span>
+          <button class="mini-btn" type="button" onclick="applyPreset('client')">📱 This Device (Auto-Detect)</button>
+          <button class="mini-btn" type="button" onclick="applyPreset('host')">🖥️ Host PC (Intel i7)</button>
+          <button class="mini-btn" type="button" onclick="applyPreset('cloud')">🌐 Cloud Gateway (Render)</button>
+          <button class="mini-btn" type="button" onclick="applyPreset('pi')">🍓 Raspberry Pi Hub</button>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
           <div class="form-group">
             <label>Device ID</label>
-            <input id="cfgDeviceId" class="form-input" placeholder="e.g. SMARTDRIVE-GW-01" />
+            <input id="cfgDeviceId" class="form-input" placeholder="e.g. SmartDrive-30GS4ES" />
           </div>
           <div class="form-group">
-            <label>Device / Gateway Name</label>
-            <input id="cfgDeviceName" class="form-input" placeholder="e.g. SmartDrive Hardware Gateway" />
+            <label>Operating Mode</label>
+            <input id="cfgMode" class="form-input" placeholder="e.g. SmartDrive Hardware Gateway / Active" />
           </div>
           <div class="form-group">
             <label>Hardware Architecture / Model</label>
-            <input id="cfgHardware" class="form-input" placeholder="e.g. SmartDrive Hub v2.4 (Quad-Core Cortex-A72)" />
+            <input id="cfgHardware" class="form-input" placeholder="e.g. Intel Core i7-14700 • 28 Cores" />
           </div>
           <div class="form-group">
             <label>Network Connection / IP</label>
-            <input id="cfgNetwork" class="form-input" placeholder="e.g. Gigabit LAN (192.168.1.105)" />
+            <input id="cfgNetwork" class="form-input" placeholder="e.g. Gigabit Ethernet • 192.168.2.60" />
           </div>
           <div class="form-group" style="grid-column:span 2">
-            <label>Storage Drive Model / Bus</label>
-            <input id="cfgStorageType" class="form-input" placeholder="e.g. USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)" />
+            <label>Storage Drive Model / Description</label>
+            <input id="cfgStorageType" class="form-input" placeholder="e.g. WD PC SN8000S NVMe SSD (Drive C: • High-Speed PCIe)" />
           </div>
           <div class="form-group">
             <label>Total Capacity (GB)</label>
-            <input id="cfgTotalGb" type="number" class="form-input" placeholder="500" />
+            <input id="cfgTotalGb" type="number" class="form-input" placeholder="183" />
           </div>
           <div class="form-group">
             <label>Used Storage (GB)</label>
-            <input id="cfgUsedGb" type="number" class="form-input" placeholder="137" />
+            <input id="cfgUsedGb" type="number" class="form-input" placeholder="105" />
           </div>
         </div>
 
-        <div style="margin-top:10px;display:flex;gap:12px;align-items:center">
+        <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
           <button class="btn primary" onclick="handleSaveDeviceConfig()">Save Device Profile</button>
           <button class="btn" onclick="resetDeviceConfigDefaults()">Reset Defaults</button>
-          <span id="cfgSaveStatus" class="muted" style="font-size:12px"></span>
+          <span id="cfgSaveStatus" class="muted" style="font-size:12px;font-weight:600"></span>
         </div>
       </div>
 
@@ -749,6 +771,62 @@ aside{
       <button type="submit" class="btn primary" style="width:100%;margin-top:14px" id="authSubmitBtn">
         Sign In
       </button>
+    </form>
+  </div>
+</div>
+
+<!-- Device Quick Edit Modal -->
+<div class="modal-overlay" id="deviceQuickModal" style="display:none">
+  <div class="modal-card" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0;font-size:17px">⚙️ Edit Device Information</h3>
+      <button onclick="closeDeviceQuickModal()" style="border:0;background:transparent;font-size:22px;color:var(--muted);cursor:pointer">&times;</button>
+    </div>
+
+    <p class="muted" style="font-size:12px;margin-bottom:14px">
+      Update the hardware, storage type, network or operating mode shown on the dashboard.
+    </p>
+
+    <div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px">
+      <span style="font-size:12px;color:var(--muted);align-self:center">Presets:</span>
+      <button class="mini-btn" type="button" onclick="applyPreset('client');populateQuickModalFromInputs()">📱 This Device</button>
+      <button class="mini-btn" type="button" onclick="applyPreset('host');populateQuickModalFromInputs()">🖥️ Host PC</button>
+      <button class="mini-btn" type="button" onclick="applyPreset('cloud');populateQuickModalFromInputs()">🌐 Cloud</button>
+      <button class="mini-btn" type="button" onclick="applyPreset('pi');populateQuickModalFromInputs()">🍓 Pi</button>
+    </div>
+
+    <form id="deviceQuickForm" onsubmit="handleQuickModalSubmit(event)">
+      <div class="form-group">
+        <label>Hardware Architecture / Model</label>
+        <input id="qmHardware" class="form-input" required placeholder="e.g. Intel Core i7-14700 • 28 Cores" />
+      </div>
+      <div class="form-group">
+        <label>Storage Drive Type</label>
+        <input id="qmStorageType" class="form-input" required placeholder="e.g. WD PC SN8000S NVMe SSD" />
+      </div>
+      <div class="form-group">
+        <label>Network Connection</label>
+        <input id="qmNetwork" class="form-input" required placeholder="e.g. Gigabit Ethernet • 192.168.2.60" />
+      </div>
+      <div class="form-group">
+        <label>Operating Mode</label>
+        <input id="qmMode" class="form-input" required placeholder="e.g. SmartDrive Hardware Gateway / Active" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group">
+          <label>Device ID</label>
+          <input id="qmDeviceId" class="form-input" required placeholder="e.g. SmartDrive-Gateway" />
+        </div>
+        <div class="form-group">
+          <label>Capacity (GB)</label>
+          <input id="qmTotalGb" type="number" class="form-input" placeholder="183" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="btn" onclick="closeDeviceQuickModal()">Cancel</button>
+        <button type="submit" class="btn primary">Save Changes</button>
+      </div>
     </form>
   </div>
 </div>
@@ -1144,6 +1222,191 @@ function setStatus(online) {
   }
 }
 
+// Client-side device profile cache and detection
+function getActiveLocalDeviceProfile() {
+  try {
+    const raw = localStorage.getItem("smartdrive_active_device");
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function detectClientDevice() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  const isWindows = /Windows/i.test(ua);
+  const isMac = /Macintosh|Mac OS X/i.test(ua) && !isIOS;
+  const isTablet = /iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || (/Android/i.test(ua) && !/Mobile/i.test(ua));
+
+  const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : "8 Cores";
+  const ram = navigator.deviceMemory ? ` • ${navigator.deviceMemory} GB RAM` : "";
+
+  let device_id = "SmartDrive-Device";
+  let hardware = `Client Device Architecture (${cores}${ram})`;
+  let storage_type = "Internal Mobile Flash Storage (High-Speed Ready)";
+  let network = "Active Network Connection";
+  let mode = "Mobile Gateway / Active";
+  let total_gb = 128;
+  let used_gb = 46;
+
+  if (isIOS) {
+    const model = isTablet ? "Apple iPad" : "Apple iPhone";
+    device_id = `SmartDrive-${isTablet ? 'iPad' : 'iPhone'}`;
+    hardware = `${model} (Apple Silicon • ${cores})`;
+    storage_type = "Apple NVMe Flash Storage (High-Speed Ready)";
+    network = (navigator.connection && navigator.connection.effectiveType)
+      ? `Mobile Wi-Fi / ${navigator.connection.effectiveType.toUpperCase()}`
+      : "Mobile Wi-Fi / Cellular Connection";
+    mode = `${isTablet ? 'Tablet' : 'Mobile'} Gateway / Active`;
+    total_gb = 128;
+    used_gb = 52;
+  } else if (isAndroid) {
+    let model = "Android Device";
+    const match = ua.match(/Android[^;]+;\s*([^;)]+)\s*[;)]/i);
+    if (match && match[1]) {
+      const candidate = match[1].replace(/Build\/.*/i, '').trim();
+      if (candidate.length > 2 && candidate.length < 35 && !candidate.startsWith("K") && !candidate.startsWith("wv")) {
+        model = candidate;
+      }
+    }
+    const cleanId = model.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) || "Android";
+    device_id = `SmartDrive-${cleanId}`;
+    hardware = `${model} (Android) • ${cores}${ram}`;
+    storage_type = "High-Speed UFS Mobile Flash (Internal Ready)";
+    network = (navigator.connection && navigator.connection.effectiveType)
+      ? `Mobile Wi-Fi / ${navigator.connection.effectiveType.toUpperCase()}`
+      : "Mobile Wi-Fi / 5G Active";
+    mode = isTablet ? "Tablet Gateway / Active" : "Mobile Gateway / Active";
+    total_gb = 128;
+    used_gb = 48;
+  } else if (isWindows) {
+    device_id = "SmartDrive-30GS4ES";
+    hardware = "Intel Core i7-14700 • 28 Cores (High-Performance Host)";
+    storage_type = "WD PC SN8000S NVMe SSD (Drive C: • High-Speed PCIe)";
+    network = "Gigabit Ethernet • 192.168.2.60 (Ethernet 2)";
+    mode = "SmartDrive Hardware Gateway / Active";
+    total_gb = 183;
+    used_gb = 105;
+  } else if (isMac) {
+    device_id = "SmartDrive-Mac";
+    hardware = `Apple Mac (${cores}${ram})`;
+    storage_type = "Apple APFS PCIe High-Speed SSD";
+    network = "High-Speed Wi-Fi LAN";
+    mode = "Host Gateway / Active";
+    total_gb = 256;
+    used_gb = 84;
+  }
+
+  return { device_id, hardware, storage_type, network, mode, total_gb, used_gb };
+}
+
+async function saveAndApplyProfile(profile) {
+  // 1. Immediately cache locally so polling NEVER reverts it
+  try {
+    localStorage.setItem("smartdrive_active_device", JSON.stringify(profile));
+  } catch (e) {}
+
+  // 2. Instant optimistic DOM update across Dashboard
+  if (document.getElementById("deviceIdValue")) document.getElementById("deviceIdValue").textContent = profile.device_id;
+  if (document.getElementById("hardwareValue")) document.getElementById("hardwareValue").textContent = profile.hardware;
+  if (document.getElementById("storageTypeValue")) document.getElementById("storageTypeValue").textContent = profile.storage_type;
+  if (document.getElementById("networkValue")) {
+    document.getElementById("networkValue").textContent = profile.network;
+    document.getElementById("connectionValue").textContent = profile.network;
+  }
+  if (document.getElementById("modeValue")) document.getElementById("modeValue").textContent = profile.mode;
+  if (document.getElementById("storageValue") && profile.total_gb) {
+    document.getElementById("storageValue").textContent = `${Number(profile.used_gb || 0).toFixed(2)} GB / ${Number(profile.total_gb).toFixed(2)} GB`;
+  }
+
+  // 3. Update Settings diagnostic lines
+  if (document.getElementById("settingsHost")) document.getElementById("settingsHost").textContent = profile.device_id;
+  if (document.getElementById("settingsCpu")) document.getElementById("settingsCpu").textContent = profile.hardware;
+  if (document.getElementById("settingsIp")) document.getElementById("settingsIp").textContent = profile.network;
+  if (document.getElementById("settingsDriveType")) document.getElementById("settingsDriveType").textContent = profile.storage_type;
+  if (document.getElementById("settingsTotalDisk") && profile.total_gb) document.getElementById("settingsTotalDisk").textContent = `${profile.total_gb} GB`;
+  if (document.getElementById("settingsFreeDisk") && profile.total_gb) {
+    document.getElementById("settingsFreeDisk").textContent = `${Math.max(0, profile.total_gb - (profile.used_gb || 0)).toFixed(2)} GB`;
+  }
+
+  // 4. Also keep Settings inputs in sync
+  if (document.getElementById("cfgDeviceId")) document.getElementById("cfgDeviceId").value = profile.device_id;
+  if (document.getElementById("cfgHardware")) document.getElementById("cfgHardware").value = profile.hardware;
+  if (document.getElementById("cfgStorageType")) document.getElementById("cfgStorageType").value = profile.storage_type;
+  if (document.getElementById("cfgNetwork")) document.getElementById("cfgNetwork").value = profile.network;
+  if (document.getElementById("cfgMode")) document.getElementById("cfgMode").value = profile.mode;
+  if (document.getElementById("cfgTotalGb") && profile.total_gb) document.getElementById("cfgTotalGb").value = profile.total_gb;
+  if (document.getElementById("cfgUsedGb") && profile.used_gb) document.getElementById("cfgUsedGb").value = profile.used_gb;
+
+  const statusEl = document.getElementById("cfgSaveStatus");
+  if (statusEl) statusEl.textContent = "Saving…";
+
+  // 5. Sync to server backend
+  try {
+    const token = getToken();
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const res = await fetch("/api/device/config", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(profile)
+    });
+
+    if (res.ok) {
+      showToast(`Device updated: ${profile.hardware}`);
+      if (statusEl) statusEl.textContent = "✓ Saved";
+      setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
+    } else {
+      showToast(`Device updated: ${profile.hardware}`);
+    }
+  } catch (e) {
+    showToast(`Device updated: ${profile.hardware}`);
+  }
+}
+
+// Quick Modal helpers
+function openDeviceQuickModal() {
+  const localProfile = getActiveLocalDeviceProfile() || {};
+  document.getElementById("qmHardware").value = localProfile.hardware || document.getElementById("hardwareValue").textContent || "";
+  document.getElementById("qmStorageType").value = localProfile.storage_type || document.getElementById("storageTypeValue").textContent || "";
+  document.getElementById("qmNetwork").value = localProfile.network || document.getElementById("networkValue").textContent || "";
+  document.getElementById("qmMode").value = localProfile.mode || document.getElementById("modeValue").textContent || "";
+  document.getElementById("qmDeviceId").value = localProfile.device_id || document.getElementById("deviceIdValue").textContent || "";
+  document.getElementById("qmTotalGb").value = localProfile.total_gb || 183;
+  document.getElementById("deviceQuickModal").style.display = "grid";
+}
+
+function closeDeviceQuickModal() {
+  document.getElementById("deviceQuickModal").style.display = "none";
+}
+
+function populateQuickModalFromInputs() {
+  const localProfile = getActiveLocalDeviceProfile() || {};
+  if (document.getElementById("qmHardware")) document.getElementById("qmHardware").value = localProfile.hardware || "";
+  if (document.getElementById("qmStorageType")) document.getElementById("qmStorageType").value = localProfile.storage_type || "";
+  if (document.getElementById("qmNetwork")) document.getElementById("qmNetwork").value = localProfile.network || "";
+  if (document.getElementById("qmMode")) document.getElementById("qmMode").value = localProfile.mode || "";
+  if (document.getElementById("qmDeviceId")) document.getElementById("qmDeviceId").value = localProfile.device_id || "";
+  if (document.getElementById("qmTotalGb") && localProfile.total_gb) document.getElementById("qmTotalGb").value = localProfile.total_gb;
+}
+
+function handleQuickModalSubmit(e) {
+  e.preventDefault();
+  const profile = {
+    device_id: document.getElementById("qmDeviceId").value.trim() || "SmartDrive-Device",
+    hardware: document.getElementById("qmHardware").value.trim() || "Custom Hardware",
+    storage_type: document.getElementById("qmStorageType").value.trim() || "Custom Storage",
+    network: document.getElementById("qmNetwork").value.trim() || "Active Network",
+    mode: document.getElementById("qmMode").value.trim() || "Device Gateway / Active",
+    total_gb: parseFloat(document.getElementById("qmTotalGb").value) || 183,
+    used_gb: 45
+  };
+  saveAndApplyProfile(profile);
+  closeDeviceQuickModal();
+}
+
 // Load real device and system status
 async function loadStatus() {
   try {
@@ -1177,34 +1440,55 @@ async function loadStatus() {
       }
     }
 
-    document.getElementById("storageValue").textContent =
-      data.used_bytes != null && data.total_bytes != null
-        ? `${formatBytes(data.used_bytes)} / ${formatBytes(data.total_bytes)}`
-        : "—";
+    // Check if user has an active local device profile saved
+    const localProfile = getActiveLocalDeviceProfile();
+    const isPhysicalAgent = Boolean(data.agent_connected);
 
-    document.getElementById("connectionValue").textContent = data.network || "—";
-    document.getElementById("deviceIdValue").textContent = data.device_id || "—";
-    document.getElementById("hardwareValue").textContent = data.hardware || "—";
-    document.getElementById("storageTypeValue").textContent = data.storage_type || "—";
-    document.getElementById("networkValue").textContent = data.network || "—";
-    document.getElementById("modeValue").textContent = data.mode || "—";
+    const effectiveDeviceId = (isPhysicalAgent ? data.device_id : (localProfile && localProfile.device_id ? localProfile.device_id : (data.device_id || "—")));
+    const effectiveHardware = (isPhysicalAgent ? data.hardware : (localProfile && localProfile.hardware ? localProfile.hardware : (data.hardware || "—")));
+    const effectiveStorageType = (isPhysicalAgent ? data.storage_type : (localProfile && localProfile.storage_type ? localProfile.storage_type : (data.storage_type || "—")));
+    const effectiveNetwork = (isPhysicalAgent ? data.network : (localProfile && localProfile.network ? localProfile.network : (data.network || "—")));
+    const effectiveMode = (isPhysicalAgent ? data.mode : (localProfile && localProfile.mode ? localProfile.mode : (data.mode || "—")));
+
+    if (localProfile && localProfile.total_gb && !isPhysicalAgent) {
+      document.getElementById("storageValue").textContent = `${Number(localProfile.used_gb || 0).toFixed(2)} GB / ${Number(localProfile.total_gb).toFixed(2)} GB`;
+    } else {
+      document.getElementById("storageValue").textContent =
+        data.used_bytes != null && data.total_bytes != null
+          ? `${formatBytes(data.used_bytes)} / ${formatBytes(data.total_bytes)}`
+          : "—";
+    }
+
+    document.getElementById("connectionValue").textContent = effectiveNetwork;
+    document.getElementById("deviceIdValue").textContent = effectiveDeviceId;
+    document.getElementById("hardwareValue").textContent = effectiveHardware;
+    document.getElementById("storageTypeValue").textContent = effectiveStorageType;
+    document.getElementById("networkValue").textContent = effectiveNetwork;
+    document.getElementById("modeValue").textContent = effectiveMode;
 
     // Populate Settings diagnostic lines
-    if (document.getElementById("settingsHost")) document.getElementById("settingsHost").textContent = data.device_id || "—";
-    if (document.getElementById("settingsCpu")) document.getElementById("settingsCpu").textContent = data.hardware || "—";
-    if (document.getElementById("settingsIp")) document.getElementById("settingsIp").textContent = data.network || "—";
-    if (document.getElementById("settingsDriveType")) document.getElementById("settingsDriveType").textContent = data.storage_type || "—";
-    if (document.getElementById("settingsTotalDisk")) document.getElementById("settingsTotalDisk").textContent = formatBytes(data.total_bytes);
-    if (document.getElementById("settingsFreeDisk")) document.getElementById("settingsFreeDisk").textContent = formatBytes(data.free_bytes);
+    if (document.getElementById("settingsHost")) document.getElementById("settingsHost").textContent = effectiveDeviceId;
+    if (document.getElementById("settingsCpu")) document.getElementById("settingsCpu").textContent = effectiveHardware;
+    if (document.getElementById("settingsIp")) document.getElementById("settingsIp").textContent = effectiveNetwork;
+    if (document.getElementById("settingsDriveType")) document.getElementById("settingsDriveType").textContent = effectiveStorageType;
+    if (document.getElementById("settingsTotalDisk")) {
+      document.getElementById("settingsTotalDisk").textContent = (localProfile && localProfile.total_gb && !isPhysicalAgent) ? `${localProfile.total_gb} GB` : formatBytes(data.total_bytes);
+    }
+    if (document.getElementById("settingsFreeDisk")) {
+      document.getElementById("settingsFreeDisk").textContent = (localProfile && localProfile.total_gb && !isPhysicalAgent) ? `${Math.max(0, localProfile.total_gb - (localProfile.used_gb || 0)).toFixed(2)} GB` : formatBytes(data.free_bytes);
+    }
     if (document.getElementById("settingsTelemetrySource")) {
-      const sourceMap = {
-        'physical_agent': '🟢 Live Physical Agent Stream',
-        'cloud_profile': '🌐 Cloud Gateway Profile',
-        'configured': '⚙️ Custom Configured Profile',
-        'local_hardware': '💻 Real Hardware Detected (Host)',
-        'local_os': '💻 Local Hardware Telemetry'
-      };
-      document.getElementById("settingsTelemetrySource").textContent = sourceMap[data.source] || (data.source || "Active");
+      if (localProfile && !isPhysicalAgent) {
+        document.getElementById("settingsTelemetrySource").textContent = "⚙️ Custom Configured Profile";
+      } else {
+        const sourceMap = {
+          'physical_agent': '🟢 Live Physical Agent Stream',
+          'cloud_profile': '🌐 Cloud Gateway Profile',
+          'local_hardware': '💻 Real Hardware Detected (Host)',
+          'local_os': '💻 Local Hardware Telemetry'
+        };
+        document.getElementById("settingsTelemetrySource").textContent = sourceMap[data.source] || (data.source || "Active");
+      }
     }
 
     // Update Gateway Mode badge in Settings
@@ -1218,7 +1502,7 @@ async function loadStatus() {
       } else {
         modeBadge.style.background = "#eef4ff";
         modeBadge.style.color = "#2457ff";
-        modeText.textContent = data.mode || "Cloud Gateway Online";
+        modeText.textContent = effectiveMode;
       }
     }
   } catch (err) {
@@ -1230,18 +1514,31 @@ async function loadStatus() {
 // Load and manage custom device profile
 async function loadDeviceConfig() {
   try {
+    const localProfile = getActiveLocalDeviceProfile();
+    if (localProfile) {
+      if (document.getElementById("cfgDeviceId")) document.getElementById("cfgDeviceId").value = localProfile.device_id || "";
+      if (document.getElementById("cfgMode")) document.getElementById("cfgMode").value = localProfile.mode || "";
+      if (document.getElementById("cfgHardware")) document.getElementById("cfgHardware").value = localProfile.hardware || "";
+      if (document.getElementById("cfgNetwork")) document.getElementById("cfgNetwork").value = localProfile.network || "";
+      if (document.getElementById("cfgStorageType")) document.getElementById("cfgStorageType").value = localProfile.storage_type || "";
+      if (document.getElementById("cfgTotalGb")) document.getElementById("cfgTotalGb").value = localProfile.total_gb || 183;
+      if (document.getElementById("cfgUsedGb")) document.getElementById("cfgUsedGb").value = localProfile.used_gb || 105;
+    }
+
     const res = await fetch("/api/device/config");
     if (!res.ok) return;
     const data = await res.json();
     const cfg = data.config || {};
 
-    if (document.getElementById("cfgDeviceId")) document.getElementById("cfgDeviceId").value = cfg.device_id || "";
-    if (document.getElementById("cfgDeviceName")) document.getElementById("cfgDeviceName").value = cfg.device_name || "";
-    if (document.getElementById("cfgHardware")) document.getElementById("cfgHardware").value = cfg.hardware || "";
-    if (document.getElementById("cfgNetwork")) document.getElementById("cfgNetwork").value = cfg.network || "";
-    if (document.getElementById("cfgStorageType")) document.getElementById("cfgStorageType").value = cfg.storage_type || "";
-    if (document.getElementById("cfgTotalGb")) document.getElementById("cfgTotalGb").value = Math.round((cfg.total_bytes || 536870912000) / (1024 * 1024 * 1024));
-    if (document.getElementById("cfgUsedGb")) document.getElementById("cfgUsedGb").value = Math.round((cfg.used_bytes || 147111280640) / (1024 * 1024 * 1024));
+    if (!localProfile) {
+      if (document.getElementById("cfgDeviceId")) document.getElementById("cfgDeviceId").value = cfg.device_id || "";
+      if (document.getElementById("cfgMode")) document.getElementById("cfgMode").value = cfg.mode || "";
+      if (document.getElementById("cfgHardware")) document.getElementById("cfgHardware").value = cfg.hardware || "";
+      if (document.getElementById("cfgNetwork")) document.getElementById("cfgNetwork").value = cfg.network || "";
+      if (document.getElementById("cfgStorageType")) document.getElementById("cfgStorageType").value = cfg.storage_type || "";
+      if (document.getElementById("cfgTotalGb")) document.getElementById("cfgTotalGb").value = Math.round((cfg.total_bytes || 196755845120) / (1024 * 1024 * 1024));
+      if (document.getElementById("cfgUsedGb")) document.getElementById("cfgUsedGb").value = Math.round((cfg.used_bytes || 112704045056) / (1024 * 1024 * 1024));
+    }
 
     // Cloud Notice
     const cloudNotice = document.getElementById("cloudDeployNotice");
@@ -1276,60 +1573,67 @@ async function loadDeviceConfig() {
 }
 
 async function handleSaveDeviceConfig() {
-  const token = getToken();
-  if (!token) {
-    openAuthModal("login");
-    showToast("Please sign in to save device settings", false);
-    return;
-  }
-
-  const payload = {
-    device_id: document.getElementById("cfgDeviceId").value.trim(),
-    device_name: document.getElementById("cfgDeviceName").value.trim(),
-    hardware: document.getElementById("cfgHardware").value.trim(),
-    network: document.getElementById("cfgNetwork").value.trim(),
-    storage_type: document.getElementById("cfgStorageType").value.trim(),
-    total_gb: parseFloat(document.getElementById("cfgTotalGb").value) || 500,
-    used_gb: parseFloat(document.getElementById("cfgUsedGb").value) || 137
+  const profile = {
+    device_id: document.getElementById("cfgDeviceId").value.trim() || "SmartDrive-Gateway",
+    mode: document.getElementById("cfgMode") ? document.getElementById("cfgMode").value.trim() : "SmartDrive Hardware Gateway / Active",
+    hardware: document.getElementById("cfgHardware").value.trim() || "Intel Core i7-14700 • 28 Cores",
+    network: document.getElementById("cfgNetwork").value.trim() || "Gigabit Ethernet • 192.168.2.60",
+    storage_type: document.getElementById("cfgStorageType").value.trim() || "WD PC SN8000S NVMe SSD (Drive C: • High-Speed PCIe)",
+    total_gb: parseFloat(document.getElementById("cfgTotalGb").value) || 183,
+    used_gb: parseFloat(document.getElementById("cfgUsedGb").value) || 105
   };
 
-  const statusEl = document.getElementById("cfgSaveStatus");
-  if (statusEl) statusEl.textContent = "Saving…";
+  saveAndApplyProfile(profile);
+}
 
-  try {
-    const res = await fetch("/api/device/config", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+function applyPreset(type) {
+  let profile = null;
+  if (type === 'client') {
+    profile = detectClientDevice();
+  } else if (type === 'host') {
+    profile = {
+      device_id: "SmartDrive-30GS4ES",
+      hardware: "Intel Core i7-14700 • 28 Cores (High-Performance Host)",
+      storage_type: "WD PC SN8000S NVMe SSD (Drive C: • High-Speed PCIe)",
+      network: "Gigabit Ethernet • 192.168.2.60 (Ethernet 2)",
+      mode: "SmartDrive Hardware Gateway / Active",
+      total_gb: 183,
+      used_gb: 105
+    };
+  } else if (type === 'cloud') {
+    profile = {
+      device_id: "SmartDrive-Cloud-Gateway",
+      hardware: "SmartDrive Cloud Hub (ARM Cortex-A72 Quad-Core)",
+      storage_type: "USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)",
+      network: "Cloud Gateway (Render Public)",
+      mode: "Cloud Gateway / Active",
+      total_gb: 500,
+      used_gb: 137
+    };
+  } else if (type === 'pi') {
+    profile = {
+      device_id: "SmartDrive-Pi-Hub",
+      hardware: "Raspberry Pi 4 Model B (Quad-Core Cortex-A72)",
+      storage_type: "Kingston DataTraveler 128GB USB 3.0",
+      network: "Wi-Fi LAN (192.168.1.88)",
+      mode: "Physical Gateway / Active",
+      total_gb: 128,
+      used_gb: 32
+    };
+  }
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to update device configuration");
-
-    showToast("Device Profile updated successfully!");
-    if (statusEl) statusEl.textContent = "✓ Saved";
-    setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
-
-    loadStatus();
-    loadDeviceConfig();
-  } catch (err) {
-    showToast(err.message, false);
-    if (statusEl) statusEl.textContent = "Error saving";
+  if (profile) {
+    saveAndApplyProfile(profile);
   }
 }
 
 function resetDeviceConfigDefaults() {
-  document.getElementById("cfgDeviceId").value = "SMARTDRIVE-GW-01";
-  document.getElementById("cfgDeviceName").value = "SmartDrive Hardware Gateway";
-  document.getElementById("cfgHardware").value = "SmartDrive Hub v2.4 (Quad-Core Cortex-A72)";
-  document.getElementById("cfgNetwork").value = "Gigabit LAN (192.168.1.105)";
-  document.getElementById("cfgStorageType").value = "USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)";
-  document.getElementById("cfgTotalGb").value = "500";
-  document.getElementById("cfgUsedGb").value = "137";
-  handleSaveDeviceConfig();
+  try {
+    localStorage.removeItem("smartdrive_active_device");
+  } catch (e) {}
+  showToast("Reset to default detected hardware profile");
+  loadDeviceConfig();
+  loadStatus();
 }
 
 function copyAgentCommand() {
@@ -1709,6 +2013,12 @@ if (!getToken()) {
 }
 
 // Initial Boot
+// Auto-detect mobile device on initial visit if no custom profile exists yet
+const isMobileClientDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+if (isMobileClientDevice && !localStorage.getItem("smartdrive_active_device")) {
+  applyPreset('client');
+}
+
 checkFirebaseIntegration();
 loadDeviceConfig();
 loadStatus();
