@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: smartdrive
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
