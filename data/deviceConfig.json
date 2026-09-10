@@ -1,11 +1,11 @@
 {
-  "device_id": "SMARTDRIVE-GW-01",
+  "device_id": "SmartDrive-30GS4ES",
   "device_name": "SmartDrive Hardware Gateway",
-  "hardware": "SmartDrive Hub v2.4 (Quad-Core Cortex-A72)",
-  "storage_type": "USB 3.2 High-Speed Storage (SanDisk Ultra 512GB)",
-  "network": "Gigabit LAN (192.168.1.105)",
-  "total_bytes": 536870912000,
-  "used_bytes": 147111280640,
-  "mode": "Storage Gateway / Active",
-  "auto_detect": false
+  "hardware": "Intel Core i7-14700 • 28 Cores (High-Performance Host)",
+  "storage_type": "WD PC SN8000S NVMe SSD (Drive C: • High-Speed PCIe)",
+  "network": "Gigabit Ethernet • 192.168.2.60 (Ethernet 2)",
+  "total_bytes": 196753080320,
+  "used_bytes": 112700465152,
+  "mode": "SmartDrive Hardware Gateway / Active",
+  "auto_detect": true
 }

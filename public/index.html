@@ -1141,6 +1141,12 @@ async function loadStatus() {
         badge.style.color = "#159957";
         text.textContent = "CLOUD GATEWAY ONLINE";
       }
+    } else {
+      if (badge && text) {
+        badge.style.background = "#eaf8f1";
+        badge.style.color = "#159957";
+        text.textContent = "DEVICE ONLINE";
+      }
     }
 
     document.getElementById("storageValue").textContent =
@@ -1167,7 +1173,8 @@ async function loadStatus() {
         'physical_agent': '🟢 Live Physical Agent Stream',
         'cloud_profile': '🌐 Cloud Gateway Profile',
         'configured': '⚙️ Custom Configured Profile',
-        'local_os': '💻 Local OS Hardware'
+        'local_hardware': '💻 Real Hardware Detected (Host)',
+        'local_os': '💻 Local Hardware Telemetry'
       };
       document.getElementById("settingsTelemetrySource").textContent = sourceMap[data.source] || (data.source || "Active");
     }
@@ -1324,8 +1331,9 @@ async function loadFiles(path = "/") {
     renderFiles(currentFilesData, currentPath);
   } catch (err) {
     console.error("Files load error:", err);
-    container.innerHTML = `<div class="empty">Error reading files from device.</div>`;
-    dashboard.innerHTML = `<div class="empty">Error reading files from device.</div>`;
+    const retryHtml = `<div class="empty">SmartDrive storage initializing or waiting for server… <button class="mini-btn" style="margin-left:10px" onclick="loadFiles('/')">↻ Retry</button></div>`;
+    if (container) container.innerHTML = retryHtml;
+    if (dashboard) dashboard.innerHTML = retryHtml;
   }
 }
 

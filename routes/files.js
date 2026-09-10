@@ -70,10 +70,18 @@ seedInitialStorage(STORAGE_ROOT);
 
 // Security: Resolve and ensure path is strictly within current STORAGE_ROOT
 function safeResolve(relPath = '/') {
-  const sanitized = relPath.replace(/\\/g, '/').replace(/\.\./g, '');
-  const resolved = path.resolve(STORAGE_ROOT, '.' + (sanitized.startsWith('/') ? sanitized : '/' + sanitized));
-  if (!resolved.startsWith(STORAGE_ROOT)) {
+  const sanitized = String(relPath || '/').replace(/\\/g, '/').replace(/\.\./g, '');
+  const relativeTarget = '.' + (sanitized.startsWith('/') ? sanitized : '/' + sanitized);
+  const resolved = path.resolve(STORAGE_ROOT, relativeTarget);
+  if (!resolved.toLowerCase().startsWith(STORAGE_ROOT.toLowerCase())) {
     return STORAGE_ROOT;
+  }
+  if (!fs.existsSync(resolved)) {
+    try {
+      fs.mkdirSync(resolved, { recursive: true });
+    } catch (e) {
+      return STORAGE_ROOT;
+    }
   }
   return resolved;
 }
@@ -107,7 +115,7 @@ router.get('/files', (req, res) => {
     const targetDir = safeResolve(requestedPath);
 
     if (!fs.existsSync(targetDir)) {
-      return res.status(404).json({ error: 'Directory not found', path: requestedPath, items: [] });
+      return res.json({ path: '/', storage_root: STORAGE_ROOT, items: [] });
     }
 
     const stat = fs.statSync(targetDir);
@@ -146,7 +154,7 @@ router.get('/files', (req, res) => {
     files.sort((a, b) => a.name.localeCompare(b.name));
 
     const displayPath = '/' + path.relative(STORAGE_ROOT, targetDir).replace(/\\/g, '/');
-    const normalizedDisplay = displayPath === '/.' ? '/' : displayPath;
+    const normalizedDisplay = (displayPath === '/.' || displayPath === '') ? '/' : displayPath;
 
     res.json({
       path: normalizedDisplay,
@@ -155,7 +163,7 @@ router.get('/files', (req, res) => {
     });
   } catch (err) {
     console.error('Files read error:', err);
-    res.status(500).json({ error: 'Failed to read files' });
+    res.json({ path: '/', storage_root: STORAGE_ROOT, items: [] });
   }
 });
 
