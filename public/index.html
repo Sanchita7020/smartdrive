@@ -1510,6 +1510,14 @@ function requestRelayDeviceStatus() {
   });
 }
 
+function requestRelayFileList(path = "/") {
+  return sendRelayMessage({
+    type: "list_files",
+    device_id: SMARTDRIVE_DEVICE_ID,
+    path: path || "/"
+  });
+}
+
 function connectSmartDriveRelay() {
   if (smartDriveSocket &&
       (smartDriveSocket.readyState === WebSocket.OPEN ||
@@ -1553,7 +1561,10 @@ function connectSmartDriveRelay() {
     if (message.type === "client_registered") {
       smartDriveRelayReady = true;
       console.log("Website registered with relay");
+
+      // Request live data from the actual ESP32.
       requestRelayDeviceStatus();
+      requestRelayFileList(currentPath || "/");
       return;
     }
 
@@ -1565,6 +1576,32 @@ function connectSmartDriveRelay() {
       lastDeviceStatus = message;
       lastDeviceStatusAt = Date.now();
       updateLiveDeviceUI(message);
+      return;
+    }
+
+    // -----------------------------------------------
+    // LIVE FILE LIST FROM ESP32
+    // -----------------------------------------------
+    if (message.type === "file_list") {
+      if (message.device_id && message.device_id !== SMARTDRIVE_DEVICE_ID) {
+        return;
+      }
+
+      const requestedPath = message.path || currentPath || "/";
+      const files = Array.isArray(message.files) ? message.files : [];
+
+      currentPath = requestedPath;
+      currentFilesData = files.map(item => ({
+        name: item.name || "",
+        path: item.path || (requestedPath === "/" ? "/" + (item.name || "") : requestedPath + "/" + (item.name || "")),
+        type: item.type === "folder" ? "folder" : "file",
+        size_bytes: Number(item.size_bytes || item.size || 0)
+      }));
+
+      renderBreadcrumbs(currentPath);
+      renderFiles(currentFilesData, currentPath);
+
+      console.log("Live file list received from ESP32:", currentFilesData);
       return;
     }
 
@@ -1747,22 +1784,31 @@ function copyAgentCommand() {
 // =====================================================
 
 async function loadFiles(path = "/") {
-  const container = document.getElementById("fileList");
-  const dashboard = document.getElementById("dashboardStorage");
-
   currentPath = path || "/";
   currentFilesData = [];
   renderBreadcrumbs(currentPath);
 
-  const html = `
+  const container = document.getElementById("fileList");
+  const dashboard = document.getElementById("dashboardStorage");
+  const loadingHtml = `
     <div class="empty">
-      <strong>SmartDrive device connected.</strong><br>
-      Live microSD file browsing will be enabled in the next step.
+      <strong>Loading live microSD files…</strong><br>
+      Reading the physical SmartDrive storage.
     </div>
   `;
 
-  if (container) container.innerHTML = html;
-  if (dashboard && currentPath === "/") dashboard.innerHTML = html;
+  if (container) container.innerHTML = loadingHtml;
+  if (dashboard && currentPath === "/") dashboard.innerHTML = loadingHtml;
+
+  if (!smartDriveSocket ||
+      smartDriveSocket.readyState === WebSocket.CLOSED) {
+    connectSmartDriveRelay();
+    return;
+  }
+
+  if (smartDriveRelayReady) {
+    requestRelayFileList(currentPath);
+  }
 }
 
 function renderBreadcrumbs(path) {
@@ -1832,8 +1878,8 @@ function renderFiles(items, path) {
         <div>
           ${
             isFolder
-            ? `<button class="mini-btn" onclick="openFolder('${encodeURIComponent(item.name)}')">Open</button>`
-            : `<button class="mini-btn" onclick="downloadFile('${encodeURIComponent(item.name)}')">Download</button>`
+            ? `<button class="mini-btn" onclick="openFolderPath('${encodeURIComponent(item.path || item.name)}')">Open</button>`
+            : `<button class="mini-btn" onclick="downloadFile('${encodeURIComponent(item.path || item.name)}')">Download</button>`
           }
         </div>
       </div>
@@ -1854,8 +1900,8 @@ function renderFiles(items, path) {
           </div>
           <div></div>
           <button class="mini-btn" onclick="${isFolder
-            ? `openFolder('${encodeURIComponent(item.name)}')`
-            : `downloadFile('${encodeURIComponent(item.name)}')`}">
+            ? `openFolderPath('${encodeURIComponent(item.path || item.name)}')`
+            : `downloadFile('${encodeURIComponent(item.path || item.name)}')`}">
             ${isFolder ? "Open" : "Download"}
           </button>
         </div>
@@ -1876,14 +1922,24 @@ function getFileIcon(filename) {
   return "📄";
 }
 
-function openFolder(encodedName) {
-  const name = decodeURIComponent(encodedName);
-  currentPath = currentPath === "/" ? "/" + name : currentPath + "/" + name;
-  loadFiles(currentPath);
+function openFolderPath(encodedPath) {
+  const path = decodeURIComponent(encodedPath);
+  loadFiles(path || "/");
 }
 
-function downloadFile(encodedName) {
-  showToast("Live ESP32 download is being connected next.", false);
+// Backward-compatible helper for any existing UI references.
+function openFolder(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  const path = currentPath === "/"
+    ? "/" + name
+    : currentPath.replace(/\/+$/, "") + "/" + name.replace(/^\/+/, "");
+  loadFiles(path);
+}
+
+function downloadFile(encodedPath) {
+  const path = decodeURIComponent(encodedPath);
+  showToast("Live ESP32 download is the next step.", false);
+  console.log("ESP32 file selected for download:", path);
 }
 
 function requestUpload() {
