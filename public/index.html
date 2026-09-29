@@ -1407,107 +1407,203 @@ function handleQuickModalSubmit(e) {
   closeDeviceQuickModal();
 }
 
-// Load real device and system status
+// =====================================================
+// SMARTDRIVE PUBLIC RELAY CONNECTION
+// Website -> Render Relay -> ESP32 -> microSD
+// =====================================================
+
+const SMARTDRIVE_RELAY_URL = "wss://smartdrive-2htn.onrender.com/ws";
+const SMARTDRIVE_DEVICE_ID = "SD001";
+
+let smartDriveSocket = null;
+let smartDriveRelayReady = false;
+let lastDeviceStatus = null;
+let lastDeviceStatusAt = 0;
+let relayReconnectTimer = null;
+
+function updateLiveDeviceUI(data) {
+  const deviceId = data.device_id || SMARTDRIVE_DEVICE_ID;
+  const ip = data.ip || "—";
+  const wifiConnected = data.wifi_connected !== false;
+  const sdConnected = data.sd_card === true;
+
+  setStatus(true);
+
+  const badge = document.getElementById("statusBadge");
+  const text = document.getElementById("statusText");
+  if (badge && text) {
+    badge.style.background = "#eaf8f1";
+    badge.style.color = "#159957";
+    text.textContent = "PHYSICAL DEVICE ONLINE";
+  }
+
+  const connection = document.getElementById("connectionValue");
+  const deviceIdEl = document.getElementById("deviceIdValue");
+  const hardwareEl = document.getElementById("hardwareValue");
+  const storageTypeEl = document.getElementById("storageTypeValue");
+  const networkEl = document.getElementById("networkValue");
+  const modeEl = document.getElementById("modeValue");
+  const storageEl = document.getElementById("storageValue");
+
+  if (connection) connection.textContent = wifiConnected ? `Wi-Fi • ${ip}` : "Wi-Fi Disconnected";
+  if (deviceIdEl) deviceIdEl.textContent = deviceId;
+  if (hardwareEl) hardwareEl.textContent = "ESP32-WROOM-32";
+  if (storageTypeEl) storageTypeEl.textContent = sdConnected ? "microSD Storage" : "microSD Not Detected";
+  if (networkEl) networkEl.textContent = wifiConnected ? `Wi-Fi • ${ip}` : "Wi-Fi Disconnected";
+  if (modeEl) modeEl.textContent = "Physical SmartDrive Device / Active";
+  if (storageEl) storageEl.textContent = sdConnected ? "microSD Connected" : "microSD Not Detected";
+
+  const settingsHost = document.getElementById("settingsHost");
+  const settingsCpu = document.getElementById("settingsCpu");
+  const settingsIp = document.getElementById("settingsIp");
+  const settingsDriveType = document.getElementById("settingsDriveType");
+  const settingsTotalDisk = document.getElementById("settingsTotalDisk");
+  const settingsFreeDisk = document.getElementById("settingsFreeDisk");
+  const settingsTelemetrySource = document.getElementById("settingsTelemetrySource");
+
+  if (settingsHost) settingsHost.textContent = deviceId;
+  if (settingsCpu) settingsCpu.textContent = "ESP32-WROOM-32";
+  if (settingsIp) settingsIp.textContent = wifiConnected ? `Wi-Fi • ${ip}` : "Wi-Fi Disconnected";
+  if (settingsDriveType) settingsDriveType.textContent = sdConnected ? "microSD Storage" : "microSD Not Detected";
+  if (settingsTotalDisk) settingsTotalDisk.textContent = "Live microSD data";
+  if (settingsFreeDisk) settingsFreeDisk.textContent = "Live microSD data";
+  if (settingsTelemetrySource) settingsTelemetrySource.textContent = "🟢 Live ESP32 via Internet Relay";
+
+  const modeBadge = document.getElementById("gatewayModeBadge");
+  const modeText = document.getElementById("gatewayModeText");
+  if (modeBadge && modeText) {
+    modeBadge.style.background = "#eaf8f1";
+    modeBadge.style.color = "#159957";
+    modeText.textContent = "Physical ESP32 Connected";
+  }
+}
+
+function markSmartDriveOffline(message = "DEVICE OFFLINE") {
+  smartDriveRelayReady = false;
+  setStatus(false);
+
+  const statusText = document.getElementById("statusText");
+  if (statusText) statusText.textContent = message;
+
+  const modeBadge = document.getElementById("gatewayModeBadge");
+  const modeText = document.getElementById("gatewayModeText");
+  if (modeBadge && modeText) {
+    modeBadge.style.background = "#fff0f0";
+    modeBadge.style.color = "#d84b4b";
+    modeText.textContent = "ESP32 Not Connected";
+  }
+}
+
+function sendRelayMessage(message) {
+  if (!smartDriveSocket || smartDriveSocket.readyState !== WebSocket.OPEN) {
+    return false;
+  }
+
+  smartDriveSocket.send(JSON.stringify(message));
+  return true;
+}
+
+function requestRelayDeviceStatus() {
+  return sendRelayMessage({
+    type: "get_status",
+    device_id: SMARTDRIVE_DEVICE_ID
+  });
+}
+
+function connectSmartDriveRelay() {
+  if (smartDriveSocket &&
+      (smartDriveSocket.readyState === WebSocket.OPEN ||
+       smartDriveSocket.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+
+  if (relayReconnectTimer) {
+    clearTimeout(relayReconnectTimer);
+    relayReconnectTimer = null;
+  }
+
+  const statusText = document.getElementById("statusText");
+  if (statusText) statusText.textContent = "CONNECTING TO SMARTDRIVE…";
+
+  console.log("Connecting to SmartDrive relay:", SMARTDRIVE_RELAY_URL);
+
+  smartDriveSocket = new WebSocket(SMARTDRIVE_RELAY_URL);
+
+  smartDriveSocket.onopen = () => {
+    console.log("Connected to SmartDrive relay");
+    sendRelayMessage({ type: "client_register" });
+  };
+
+  smartDriveSocket.onmessage = (event) => {
+    let message;
+
+    try {
+      message = JSON.parse(event.data);
+    } catch (error) {
+      console.error("Invalid relay message:", event.data);
+      return;
+    }
+
+    console.log("Relay message:", message);
+
+    if (message.type === "connected") {
+      return;
+    }
+
+    if (message.type === "client_registered") {
+      smartDriveRelayReady = true;
+      console.log("Website registered with relay");
+      requestRelayDeviceStatus();
+      return;
+    }
+
+    if (message.type === "device_status") {
+      if (message.device_id && message.device_id !== SMARTDRIVE_DEVICE_ID) {
+        return;
+      }
+
+      lastDeviceStatus = message;
+      lastDeviceStatusAt = Date.now();
+      updateLiveDeviceUI(message);
+      return;
+    }
+
+    if (message.type === "device_offline") {
+      markSmartDriveOffline("DEVICE OFFLINE");
+      return;
+    }
+  };
+
+  smartDriveSocket.onerror = (error) => {
+    console.error("SmartDrive relay error:", error);
+    markSmartDriveOffline("RELAY CONNECTION ERROR");
+  };
+
+  smartDriveSocket.onclose = () => {
+    console.log("SmartDrive relay disconnected");
+    smartDriveRelayReady = false;
+    markSmartDriveOffline("RELAY DISCONNECTED");
+
+    relayReconnectTimer = setTimeout(() => {
+      connectSmartDriveRelay();
+    }, 5000);
+  };
+}
+
+// Load live device status from the physical ESP32 through the public relay
 async function loadStatus() {
-  try {
-    const response = await fetch("/api/status");
-    if (!response.ok) throw new Error("Failed to fetch device status");
-    const data = await response.json();
+  if (!smartDriveSocket ||
+      smartDriveSocket.readyState === WebSocket.CLOSED) {
+    connectSmartDriveRelay();
+    return;
+  }
 
-    const isOnline = Boolean(data.online);
-    setStatus(isOnline);
+  if (smartDriveRelayReady) {
+    requestRelayDeviceStatus();
+  }
 
-    const badge = document.getElementById("statusBadge");
-    const text = document.getElementById("statusText");
-
-    if (data.agent_connected) {
-      if (badge && text) {
-        badge.style.background = "#eaf8f1";
-        badge.style.color = "#159957";
-        text.textContent = "PHYSICAL GATEWAY ONLINE";
-      }
-    } else if (data.source === 'cloud_profile') {
-      if (badge && text) {
-        badge.style.background = "#eaf8f1";
-        badge.style.color = "#159957";
-        text.textContent = "CLOUD GATEWAY ONLINE";
-      }
-    } else {
-      if (badge && text) {
-        badge.style.background = "#eaf8f1";
-        badge.style.color = "#159957";
-        text.textContent = "DEVICE ONLINE";
-      }
-    }
-
-    // Check if user has an active local device profile saved
-    const localProfile = getActiveLocalDeviceProfile();
-    const isPhysicalAgent = Boolean(data.agent_connected);
-
-    const effectiveDeviceId = (isPhysicalAgent ? data.device_id : (localProfile && localProfile.device_id ? localProfile.device_id : (data.device_id || "—")));
-    const effectiveHardware = (isPhysicalAgent ? data.hardware : (localProfile && localProfile.hardware ? localProfile.hardware : (data.hardware || "—")));
-    const effectiveStorageType = (isPhysicalAgent ? data.storage_type : (localProfile && localProfile.storage_type ? localProfile.storage_type : (data.storage_type || "—")));
-    const effectiveNetwork = (isPhysicalAgent ? data.network : (localProfile && localProfile.network ? localProfile.network : (data.network || "—")));
-    const effectiveMode = (isPhysicalAgent ? data.mode : (localProfile && localProfile.mode ? localProfile.mode : (data.mode || "—")));
-
-    if (localProfile && localProfile.total_gb && !isPhysicalAgent) {
-      document.getElementById("storageValue").textContent = `${Number(localProfile.used_gb || 0).toFixed(2)} GB / ${Number(localProfile.total_gb).toFixed(2)} GB`;
-    } else {
-      document.getElementById("storageValue").textContent =
-        data.used_bytes != null && data.total_bytes != null
-          ? `${formatBytes(data.used_bytes)} / ${formatBytes(data.total_bytes)}`
-          : "—";
-    }
-
-    document.getElementById("connectionValue").textContent = effectiveNetwork;
-    document.getElementById("deviceIdValue").textContent = effectiveDeviceId;
-    document.getElementById("hardwareValue").textContent = effectiveHardware;
-    document.getElementById("storageTypeValue").textContent = effectiveStorageType;
-    document.getElementById("networkValue").textContent = effectiveNetwork;
-    document.getElementById("modeValue").textContent = effectiveMode;
-
-    // Populate Settings diagnostic lines
-    if (document.getElementById("settingsHost")) document.getElementById("settingsHost").textContent = effectiveDeviceId;
-    if (document.getElementById("settingsCpu")) document.getElementById("settingsCpu").textContent = effectiveHardware;
-    if (document.getElementById("settingsIp")) document.getElementById("settingsIp").textContent = effectiveNetwork;
-    if (document.getElementById("settingsDriveType")) document.getElementById("settingsDriveType").textContent = effectiveStorageType;
-    if (document.getElementById("settingsTotalDisk")) {
-      document.getElementById("settingsTotalDisk").textContent = (localProfile && localProfile.total_gb && !isPhysicalAgent) ? `${localProfile.total_gb} GB` : formatBytes(data.total_bytes);
-    }
-    if (document.getElementById("settingsFreeDisk")) {
-      document.getElementById("settingsFreeDisk").textContent = (localProfile && localProfile.total_gb && !isPhysicalAgent) ? `${Math.max(0, localProfile.total_gb - (localProfile.used_gb || 0)).toFixed(2)} GB` : formatBytes(data.free_bytes);
-    }
-    if (document.getElementById("settingsTelemetrySource")) {
-      if (localProfile && !isPhysicalAgent) {
-        document.getElementById("settingsTelemetrySource").textContent = "⚙️ Custom Configured Profile";
-      } else {
-        const sourceMap = {
-          'physical_agent': '🟢 Live Physical Agent Stream',
-          'cloud_profile': '🌐 Cloud Gateway Profile',
-          'local_hardware': '💻 Real Hardware Detected (Host)',
-          'local_os': '💻 Local Hardware Telemetry'
-        };
-        document.getElementById("settingsTelemetrySource").textContent = sourceMap[data.source] || (data.source || "Active");
-      }
-    }
-
-    // Update Gateway Mode badge in Settings
-    const modeBadge = document.getElementById("gatewayModeBadge");
-    const modeText = document.getElementById("gatewayModeText");
-    if (modeBadge && modeText) {
-      if (data.agent_connected) {
-        modeBadge.style.background = "#eaf8f1";
-        modeBadge.style.color = "#159957";
-        modeText.textContent = "Physical Hardware Connected";
-      } else {
-        modeBadge.style.background = "#eef4ff";
-        modeBadge.style.color = "#2457ff";
-        modeText.textContent = effectiveMode;
-      }
-    }
-  } catch (err) {
-    console.error("Status load error:", err);
-    setStatus(false);
+  if (lastDeviceStatusAt && Date.now() - lastDeviceStatusAt > 20000) {
+    markSmartDriveOffline("DEVICE STATUS TIMEOUT");
   }
 }
 
@@ -1644,29 +1740,29 @@ function copyAgentCommand() {
   showToast("Gateway Agent command copied to clipboard!");
 }
 
-// Load real files
+// =====================================================
+// LIVE FILE BROWSER
+// File transfer through the relay is Step 2.
+// Do NOT show the old Render/demo storage as device data.
+// =====================================================
+
 async function loadFiles(path = "/") {
   const container = document.getElementById("fileList");
   const dashboard = document.getElementById("dashboardStorage");
 
-  try {
-    const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
-    if (!response.ok) throw new Error("Failed to fetch storage files");
-    const data = await response.json();
+  currentPath = path || "/";
+  currentFilesData = [];
+  renderBreadcrumbs(currentPath);
 
-    currentPath = data.path || path;
-    currentFilesData = data.items || [];
-    if (data.storage_root && document.getElementById("settingsStoragePath")) {
-      document.getElementById("settingsStoragePath").textContent = data.storage_root;
-    }
-    renderBreadcrumbs(currentPath);
-    renderFiles(currentFilesData, currentPath);
-  } catch (err) {
-    console.error("Files load error:", err);
-    const retryHtml = `<div class="empty">SmartDrive storage initializing or waiting for server… <button class="mini-btn" style="margin-left:10px" onclick="loadFiles('/')">↻ Retry</button></div>`;
-    if (container) container.innerHTML = retryHtml;
-    if (dashboard) dashboard.innerHTML = retryHtml;
-  }
+  const html = `
+    <div class="empty">
+      <strong>SmartDrive device connected.</strong><br>
+      Live microSD file browsing will be enabled in the next step.
+    </div>
+  `;
+
+  if (container) container.innerHTML = html;
+  if (dashboard && currentPath === "/") dashboard.innerHTML = html;
 }
 
 function renderBreadcrumbs(path) {
@@ -1787,19 +1883,7 @@ function openFolder(encodedName) {
 }
 
 function downloadFile(encodedName) {
-  const name = decodeURIComponent(encodedName);
-  const fullPath = currentPath === "/" ? "/" + name : currentPath + "/" + name;
-  const downloadUrl = `/api/download?path=${encodeURIComponent(fullPath)}`;
-
-  const link = document.createElement("a");
-  link.href = downloadUrl;
-  link.setAttribute("download", name);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  showToast(`Downloading ${name}…`);
-  setTimeout(loadActivity, 1000);
+  showToast("Live ESP32 download is being connected next.", false);
 }
 
 function requestUpload() {
