@@ -1421,6 +1421,9 @@ let lastDeviceStatus = null;
 let lastDeviceStatusAt = 0;
 let relayReconnectTimer = null;
 
+let activeDownload = null;
+let downloadSequence = 0;
+
 function updateLiveDeviceUI(data) {
   const deviceId = data.device_id || SMARTDRIVE_DEVICE_ID;
   const ip = data.ip || "—";
@@ -1536,13 +1539,46 @@ function connectSmartDriveRelay() {
   console.log("Connecting to SmartDrive relay:", SMARTDRIVE_RELAY_URL);
 
   smartDriveSocket = new WebSocket(SMARTDRIVE_RELAY_URL);
+  smartDriveSocket.binaryType = "arraybuffer";
 
   smartDriveSocket.onopen = () => {
     console.log("Connected to SmartDrive relay");
     sendRelayMessage({ type: "client_register" });
   };
 
-  smartDriveSocket.onmessage = (event) => {
+  smartDriveSocket.onmessage = async (event) => {
+
+    // Binary messages are file chunks from the ESP32.
+    if (typeof event.data !== "string") {
+      if (!activeDownload) {
+        console.warn("Binary data received without an active download");
+        return;
+      }
+
+      try {
+        let buffer;
+        if (event.data instanceof ArrayBuffer) {
+          buffer = event.data;
+        } else if (event.data instanceof Blob) {
+          buffer = await event.data.arrayBuffer();
+        } else {
+          console.warn("Unsupported binary WebSocket message");
+          return;
+        }
+
+        activeDownload.chunks.push(buffer);
+        activeDownload.receivedBytes += buffer.byteLength;
+
+        console.log(
+          `Download chunk received: ${buffer.byteLength} bytes; total ${activeDownload.receivedBytes} bytes`
+        );
+      } catch (error) {
+        console.error("Failed to process download chunk:", error);
+      }
+
+      return;
+    }
+
     let message;
 
     try {
@@ -1561,8 +1597,6 @@ function connectSmartDriveRelay() {
     if (message.type === "client_registered") {
       smartDriveRelayReady = true;
       console.log("Website registered with relay");
-
-      // Request live data from the actual ESP32.
       requestRelayDeviceStatus();
       requestRelayFileList(currentPath || "/");
       return;
@@ -1579,9 +1613,6 @@ function connectSmartDriveRelay() {
       return;
     }
 
-    // -----------------------------------------------
-    // LIVE FILE LIST FROM ESP32
-    // -----------------------------------------------
     if (message.type === "file_list") {
       if (message.device_id && message.device_id !== SMARTDRIVE_DEVICE_ID) {
         return;
@@ -1593,7 +1624,13 @@ function connectSmartDriveRelay() {
       currentPath = requestedPath;
       currentFilesData = files.map(item => ({
         name: item.name || "",
-        path: item.path || (requestedPath === "/" ? "/" + (item.name || "") : requestedPath + "/" + (item.name || "")),
+        path: item.path || (
+          (item.name || "").startsWith("/")
+            ? item.name
+            : (requestedPath === "/"
+                ? "/" + (item.name || "")
+                : requestedPath.replace(/\/$/, "") + "/" + (item.name || ""))
+        ),
         type: item.type === "folder" ? "folder" : "file",
         size_bytes: Number(item.size_bytes || item.size || 0)
       }));
@@ -1602,6 +1639,109 @@ function connectSmartDriveRelay() {
       renderFiles(currentFilesData, currentPath);
 
       console.log("Live file list received from ESP32:", currentFilesData);
+      return;
+    }
+
+    // -------------------------------------------------
+    // Remote download: start
+    // -------------------------------------------------
+    if (message.type === "download_start") {
+      if (!activeDownload || message.request_id !== activeDownload.requestId) {
+        console.warn("Ignoring unmatched download_start", message);
+        return;
+      }
+
+      activeDownload.expectedSize = Number(message.size || 0);
+      activeDownload.fileName = message.filename || activeDownload.fileName;
+      activeDownload.contentType = message.content_type || "application/octet-stream";
+
+      console.log(
+        `Download started: ${activeDownload.fileName}; expected ${activeDownload.expectedSize} bytes`
+      );
+
+      showToast(`Downloading ${activeDownload.fileName}…`);
+      return;
+    }
+
+    // -------------------------------------------------
+    // Remote download: complete
+    // -------------------------------------------------
+    if (message.type === "download_complete") {
+      if (!activeDownload || message.request_id !== activeDownload.requestId) {
+        console.warn("Ignoring unmatched download_complete", message);
+        return;
+      }
+
+      const download = activeDownload;
+      activeDownload = null;
+
+      if (
+        download.expectedSize > 0 &&
+        download.receivedBytes !== download.expectedSize
+      ) {
+        console.error("Download size mismatch", {
+          expected: download.expectedSize,
+          received: download.receivedBytes
+        });
+
+        showToast(
+          `Download incomplete: ${formatBytes(download.receivedBytes)} / ${formatBytes(download.expectedSize)}`,
+          false
+        );
+        return;
+      }
+
+      const blob = new Blob(
+        download.chunks,
+        { type: download.contentType }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = download.fileName || "download";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      showToast(
+        `Downloaded ${download.fileName} (${formatBytes(download.receivedBytes)})`
+      );
+
+      console.log(
+        `Download complete: ${download.receivedBytes} bytes`
+      );
+
+      return;
+    }
+
+    // -------------------------------------------------
+    // Remote download: error
+    // -------------------------------------------------
+    if (message.type === "download_error") {
+      if (
+        activeDownload &&
+        message.request_id === activeDownload.requestId
+      ) {
+        const errorMessage =
+          message.message || "File download failed";
+
+        activeDownload = null;
+
+        console.error(
+          "Remote download error:",
+          errorMessage
+        );
+
+        showToast(
+          errorMessage,
+          false
+        );
+      }
+
       return;
     }
 
@@ -1937,9 +2077,62 @@ function openFolder(encodedName) {
 }
 
 function downloadFile(encodedPath) {
-  const path = decodeURIComponent(encodedPath);
-  showToast("Live ESP32 download is the next step.", false);
-  console.log("ESP32 file selected for download:", path);
+
+  if (!smartDriveRelayReady) {
+    showToast("SmartDrive device is not connected.", false);
+    connectSmartDriveRelay();
+    return;
+  }
+
+  if (activeDownload) {
+    showToast("Another download is already in progress.", false);
+    return;
+  }
+
+  const rawName = decodeURIComponent(encodedPath);
+
+  const path = rawName.startsWith("/")
+    ? rawName
+    : (currentPath === "/"
+        ? "/" + rawName
+        : currentPath.replace(/\/$/, "") + "/" + rawName);
+
+  const fileName =
+    path.substring(path.lastIndexOf("/") + 1) || "download";
+
+  const requestId =
+    `dl-${Date.now()}-${++downloadSequence}`;
+
+  activeDownload = {
+    requestId,
+    path,
+    fileName,
+    contentType: "application/octet-stream",
+    expectedSize: 0,
+    receivedBytes: 0,
+    chunks: []
+  };
+
+  const sent = sendRelayMessage({
+    type: "download_request",
+    request_id: requestId,
+    device_id: SMARTDRIVE_DEVICE_ID,
+    path
+  });
+
+  if (!sent) {
+    activeDownload = null;
+    showToast("Unable to contact SmartDrive device.", false);
+    return;
+  }
+
+  console.log("Download request sent:", {
+    request_id: requestId,
+    device_id: SMARTDRIVE_DEVICE_ID,
+    path
+  });
+
+  showToast(`Requesting ${fileName}…`);
 }
 
 function requestUpload() {
